@@ -1,6 +1,64 @@
 -- Additive administration workflow for BioMedGest inventory.
 -- This migration does not modify imported values or create maintenance orders automatically.
 
+begin;
+
+do $$
+declare
+  admin_columns integer;
+  admin_functions integer;
+  admin_triggers integer;
+  review_policies integer;
+  review_table_exists boolean;
+begin
+  select count(*) into admin_columns
+  from information_schema.columns
+  where table_schema = 'public'
+    and table_name = 'equipment_maintenance_programs'
+    and column_name in (
+      'interval_months', 'periodicity_basis', 'periodicity_notes', 'reference_date',
+      'last_completed_on', 'next_due_on', 'configured_by', 'configured_at', 'updated_at'
+    );
+  select count(distinct proname) into admin_functions
+  from pg_proc
+  where pronamespace = 'public'::regnamespace
+    and proname in (
+      'update_equipment_asset_admin', 'configure_equipment_preventive_program',
+      'schedule_preventive_maintenance', 'review_inventory_issue', 'write_inventory_audit_log'
+    );
+  select count(*) into admin_triggers
+  from pg_trigger
+  where not tgisinternal
+    and tgname in (
+      'equipment_programs_set_updated_at', 'audit_equipment_assets',
+      'audit_equipment_programs', 'audit_inventory_issues',
+      'audit_inventory_issue_reviews', 'audit_maintenances'
+    );
+  select count(*) into review_policies
+  from pg_policies
+  where schemaname = 'public' and tablename = 'inventory_issue_reviews';
+  review_table_exists := to_regclass('public.inventory_issue_reviews') is not null;
+
+  if not (
+    (admin_columns = 0 and admin_functions = 0 and admin_triggers = 0 and review_policies = 0 and not review_table_exists)
+    or
+    (admin_columns = 9 and admin_functions = 5 and admin_triggers = 6 and review_policies = 2 and review_table_exists)
+  ) then
+    raise exception 'Instalación parcial de administración detectada: columnas %, funciones %, triggers %, políticas %, tabla %',
+      admin_columns, admin_functions, admin_triggers, review_policies, review_table_exists;
+  end if;
+end $$;
+
+create temporary table inventory_admin_deploy_baseline on commit drop as
+select
+  (select count(*) from public.equipment_assets) as assets,
+  (select count(*) from public.risk_assessments) as risks,
+  (select count(*) from public.maintenance_programs) as programs,
+  (select count(*) from public.equipment_document_links) as document_links,
+  (select count(*) from public.inventory_import_issues) as issues,
+  (to_regclass('public.inventory_issue_reviews') is not null) as installed_before,
+  (to_regprocedure('public.rls_auto_enable()') is not null) as rls_auto_enable_existed;
+
 alter table public.equipment_maintenance_programs
   add column if not exists interval_months smallint,
   add column if not exists periodicity_basis text,
@@ -341,3 +399,71 @@ grant execute on function public.schedule_preventive_maintenance(uuid, bigint, t
 
 revoke all on function public.review_inventory_issue(bigint, public.inventory_review_status, text, text, text) from public;
 grant execute on function public.review_inventory_issue(bigint, public.inventory_review_status, text, text, text) to authenticated;
+
+do $$
+declare
+  baseline record;
+  current_count bigint;
+  function_signature text;
+begin
+  select * into baseline from inventory_admin_deploy_baseline;
+
+  select count(*) into current_count from public.equipment_assets;
+  if current_count <> baseline.assets then raise exception 'Cambió el total de equipos: % -> %', baseline.assets, current_count; end if;
+  select count(*) into current_count from public.risk_assessments;
+  if current_count <> baseline.risks then raise exception 'Cambió el total de riesgos: % -> %', baseline.risks, current_count; end if;
+  select count(*) into current_count from public.maintenance_programs;
+  if current_count <> baseline.programs then raise exception 'Cambió el total de rutinas: % -> %', baseline.programs, current_count; end if;
+  select count(*) into current_count from public.equipment_document_links;
+  if current_count <> baseline.document_links then raise exception 'Cambió el total de vínculos documentales: % -> %', baseline.document_links, current_count; end if;
+  select count(*) into current_count from public.inventory_import_issues;
+  if current_count <> baseline.issues then raise exception 'Cambió el total de incidencias: % -> %', baseline.issues, current_count; end if;
+
+  if to_regclass('public.inventory_issue_reviews') is null then
+    raise exception 'No se creó inventory_issue_reviews';
+  end if;
+  if (select count(*) from information_schema.columns
+      where table_schema = 'public' and table_name = 'equipment_maintenance_programs'
+        and column_name in (
+          'interval_months', 'periodicity_basis', 'periodicity_notes', 'reference_date',
+          'last_completed_on', 'next_due_on', 'configured_by', 'configured_at', 'updated_at'
+        )) <> 9 then
+    raise exception 'No se crearon las nueve columnas administrativas esperadas';
+  end if;
+  if (select count(distinct proname) from pg_proc
+      where pronamespace = 'public'::regnamespace
+        and proname in (
+          'update_equipment_asset_admin', 'configure_equipment_preventive_program',
+          'schedule_preventive_maintenance', 'review_inventory_issue', 'write_inventory_audit_log'
+        )) <> 5 then
+    raise exception 'No se crearon las cinco funciones administrativas esperadas';
+  end if;
+  if (select count(*) from pg_trigger where not tgisinternal and tgname in (
+      'equipment_programs_set_updated_at', 'audit_equipment_assets',
+      'audit_equipment_programs', 'audit_inventory_issues',
+      'audit_inventory_issue_reviews', 'audit_maintenances'
+    )) <> 6 then
+    raise exception 'No se crearon los seis triggers administrativos esperados';
+  end if;
+  if (select count(*) from pg_policies
+      where schemaname = 'public' and tablename = 'inventory_issue_reviews') <> 2 then
+    raise exception 'No se crearon las dos políticas de revisión esperadas';
+  end if;
+  if baseline.rls_auto_enable_existed and to_regprocedure('public.rls_auto_enable()') is null then
+    raise exception 'La función remota rls_auto_enable ya no está disponible';
+  end if;
+
+  foreach function_signature in array array[
+    'public.update_equipment_asset_admin(uuid,text,boolean,smallint,smallint,bigint,bigint,text,public.equipment_status)',
+    'public.configure_equipment_preventive_program(uuid,bigint,smallint,text,text,date,date)',
+    'public.schedule_preventive_maintenance(uuid,bigint,timestamptz,uuid,text)',
+    'public.review_inventory_issue(bigint,public.inventory_review_status,text,text,text)'
+  ] loop
+    if not has_function_privilege('authenticated', function_signature, 'EXECUTE')
+      or has_function_privilege('anon', function_signature, 'EXECUTE') then
+      raise exception 'Privilegios inesperados en %', function_signature;
+    end if;
+  end loop;
+end $$;
+
+commit;
