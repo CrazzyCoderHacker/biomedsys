@@ -38,6 +38,23 @@ declare
   existing_inventory_tables text[];
   existing_bridge_columns text[];
   conflicting_policies text[];
+  critical_columns text[];
+  expected_critical_columns text[] := array[
+    'maintenance_activities.id:bigint',
+    'maintenance_activities.maintenance_id:bigint',
+    'maintenances.assigned_to:uuid',
+    'maintenances.created_by:uuid',
+    'maintenances.id:bigint',
+    'maintenances.status:text',
+    'profiles.active:boolean',
+    'profiles.id:uuid',
+    'profiles.role:app_role',
+    'reports.id:bigint',
+    'reports.maintenance_id:bigint',
+    'reports.reporter_id:uuid'
+  ];
+  app_roles text[];
+  maintenance_types text[];
   policy_count integer;
   rls_table_count integer;
 begin
@@ -79,9 +96,84 @@ begin
     raise exception 'Preflight aborted: bridge columns already exist: %', existing_bridge_columns;
   end if;
 
+  select array_agg(
+    format('%s.%s:%s', c.relname, a.attname, format_type(a.atttypid, a.atttypmod))
+    order by c.relname, a.attname
+  )
+  into critical_columns
+  from pg_attribute a
+  join pg_class c on c.oid = a.attrelid
+  join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public'
+    and a.attnum > 0
+    and not a.attisdropped
+    and (
+      (c.relname = 'maintenance_activities' and a.attname in ('id', 'maintenance_id')) or
+      (c.relname = 'maintenances' and a.attname in ('id', 'assigned_to', 'created_by', 'status')) or
+      (c.relname = 'profiles' and a.attname in ('id', 'role', 'active')) or
+      (c.relname = 'reports' and a.attname in ('id', 'maintenance_id', 'reporter_id'))
+    );
+
+  if critical_columns is distinct from expected_critical_columns then
+    raise exception 'Preflight aborted: critical column types drifted. Expected %, found %',
+      expected_critical_columns, critical_columns;
+  end if;
+
+  select array_agg(e.enumlabel order by e.enumsortorder)
+  into app_roles
+  from pg_type t
+  join pg_namespace n on n.oid = t.typnamespace
+  join pg_enum e on e.enumtypid = t.oid
+  where n.nspname = 'public' and t.typname = 'app_role';
+
+  if app_roles is distinct from array['jefe', 'tecnico', 'usuario']::text[] then
+    raise exception 'Preflight aborted: app_role values drifted: %', app_roles;
+  end if;
+
+  select array_agg(e.enumlabel order by e.enumsortorder)
+  into maintenance_types
+  from pg_type t
+  join pg_namespace n on n.oid = t.typnamespace
+  join pg_enum e on e.enumtypid = t.oid
+  where n.nspname = 'public' and t.typname = 'maintenance_type';
+
+  if maintenance_types is distinct from array['preventivo', 'inspeccion', 'correctivo']::text[] then
+    raise exception 'Preflight aborted: maintenance_type values drifted: %', maintenance_types;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.profiles'::regclass and contype = 'p'
+  ) or not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.reports'::regclass and contype = 'p'
+  ) or not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.maintenances'::regclass and contype = 'p'
+  ) then
+    raise exception 'Preflight aborted: a required primary key is missing';
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.maintenance_activities'::regclass
+      and confrelid = 'public.maintenances'::regclass and contype = 'f'
+  ) or not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.reports'::regclass
+      and confrelid = 'public.maintenances'::regclass and contype = 'f'
+  ) or not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.maintenances'::regclass
+      and confrelid = 'public.profiles'::regclass and contype = 'f'
+  ) then
+    raise exception 'Preflight aborted: a required base foreign key is missing';
+  end if;
+
   if not exists (
     select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public' and p.proname = 'is_manager'
+      and p.pronargs = 0 and p.prorettype = 'boolean'::regtype
   ) then
     raise exception 'Preflight aborted: public.is_manager is missing';
   end if;

@@ -2,6 +2,24 @@
 
 Estado de la revisión: 2026-11-04. Proyecto remoto inspeccionado: `yvqccoavcwfzcxrfvsjs`, rama `main` marcada como producción. Esta guía no autoriza ni ejecuta cambios remotos.
 
+## Preflight remoto ejecutado
+
+El 2026-11-04 el usuario aceptó explícitamente continuar sin respaldo recuperable. Se ejecutó `scripts/inventory/preflight_official_inventory.sql` en modo de solo lectura contra el proyecto oficial. No se ejecutó DDL ni se importaron datos.
+
+Resultado aprobado:
+
+- proyecto `yvqccoavcwfzcxrfvsjs`, base `postgres`;
+- 10 tablas públicas y 16 políticas RLS;
+- 3 perfiles y 3 usuarios Auth;
+- 0 reportes, 0 mantenimientos y 0 actividades de mantenimiento;
+- función `rls_auto_enable` presente;
+- ninguna tabla, vista, función o columna del inventario instalada parcialmente;
+- ninguna colisión con los nombres de políticas que añadirá `12_inventory_security.sql`;
+- tipos críticos, llaves primarias, llaves foráneas y enums base compatibles con los SQL locales;
+- `is_manager()` existe con firma sin argumentos y retorno booleano.
+
+La Fase 2 permanece pendiente de autorización final y acuerdo del propietario. El preflight debe repetirse inmediatamente antes del primer DDL; cualquier cambio en su resultado cancela el despliegue.
+
 ## Estado remoto y comparación
 
 El esquema remoto contiene diez tablas públicas: `profiles`, `maintenance_catalog`, `maintenances`, `maintenance_activities`, `reports`, `trainings`, `training_participants`, `quotes`, `audit_log` y `user_access_requests`. Todas tienen RLS habilitado y existen 16 políticas. Las columnas visibles concuerdan con los módulos base `01`, `03`, `04`, `07`, `08`, `09` y `10`; `05_security.sql` concuerda con las políticas existentes. No hay migraciones registradas, por lo que no se debe asumir que esos archivos fueron aplicados por una herramienta de migración.
