@@ -25,17 +25,15 @@ El proyecto está en plan Free y no presenta un respaldo automático descargable
 
 1. Guardar la contraseña de base de datos únicamente en un archivo `pgpass` local, fuera del repositorio, con una entrada `host:port:database:user:password`. No pasar la contraseña por parámetros ni registrarla en el chat.
 2. Ejecutar `scripts/inventory/backup_remote_supabase.ps1` indicando host, archivo `pgpass` y una carpeta de salida fuera del repositorio.
-3. Conservar los cuatro artefactos generados: respaldo custom, esquema SQL, lista de contenido y archivo SHA-256.
-4. Confirmar que `pg_restore --list` terminó correctamente y que la lista incluye `public`, `auth` y los datos de usuarios. Si alguna sección no es accesible, detener el despliegue y corregir el método de respaldo.
-5. Restaurar el archivo custom en una base desechable independiente y repetir conteos antes de considerar el respaldo recuperable. Un archivo generado pero no restaurado no se considera respaldo verificado.
+3. Conservar los seis artefactos generados: respaldo completo, respaldo restaurable de `public`, esquema SQL, las dos listas de contenido y el archivo SHA-256.
+4. Confirmar que `pg_restore --list` terminó correctamente para ambos archivos y que el respaldo completo incluye `public`, `auth` y los datos de usuarios. Si alguna sección no es accesible, detener el despliegue y corregir el método de respaldo.
+5. Restaurar como mínimo el respaldo de `public` en PostgreSQL local desechable y repetir conteos antes de considerarlo recuperable. El respaldo completo se conserva además para recuperación coordinada con Supabase. Un archivo generado pero no restaurado no se considera respaldo verificado.
 
 No hay un respaldo remoto verificable disponible todavía: falta ejecutar este procedimiento con acceso de base de datos guardado localmente.
 
-## Entorno de desarrollo recomendado
+## Entorno objetivo
 
-La opción más segura es un segundo proyecto Supabase Free si la organización conserva uno de sus dos cupos gratuitos. Debe usar datos sintéticos o el mínimo conjunto autorizado; no se deben copiar usuarios reales ni datos de producción. Allí se aplica primero la línea base comprobada y después los tres archivos en orden.
-
-Las Preview Branches también aíslan esquema y credenciales, pero requieren un plan que admita Branching y generan consumo facturable. No deben crearse sin aprobación de costo. Mientras no exista un segundo proyecto, PostgreSQL local sigue siendo la prevalidación, pero no reemplaza una prueba integral de Auth/RLS/API en Supabase.
+Por decisión del equipo no se creará otro proyecto. PostgreSQL local desechable seguirá siendo la prevalidación y el proyecto oficial solo se modificará después de verificar el respaldo y recibir aprobación expresa.
 
 ## Línea base del esquema existente
 
@@ -55,7 +53,7 @@ Orden obligatorio:
 2. `11_inventory_relations.sql`
 3. `12_inventory_security.sql`
 
-Cada archivo debe ejecutarse con `psql -X --set ON_ERROR_STOP=1 --single-transaction`, desde una conexión guardada localmente. Primero en el proyecto de desarrollo; después, con una nueva aprobación, en producción.
+Cada archivo debe ejecutarse con `psql -X --set ON_ERROR_STOP=1 --single-transaction`, desde una conexión guardada localmente. Antes de cualquier DDL debe ejecutarse `scripts/inventory/preflight_official_inventory.sql`; si detecta deriva, objetos parciales, políticas inesperadas o ausencia de `rls_auto_enable`, el despliegue se cancela y vuelve a revisión.
 
 ### Cambios que requieren aprobación
 
@@ -69,7 +67,8 @@ Cada archivo debe ejecutarse con `psql -X --set ON_ERROR_STOP=1 --single-transac
 `11_inventory_relations.sql`:
 
 - Añadir una FK nullable a `reports`.
-- Añadir dos FK nullable, `priority NOT NULL DEFAULT 'ordinaria'` y `completed_at` a `maintenances`.
+- Añadir dos FK nullable, `priority` nullable y `completed_at` a `maintenances`.
+- Conservar `priority = NULL` en órdenes antiguas; configurar `DEFAULT 'ordinaria'` únicamente para órdenes nuevas.
 - Crear tres índices, `maintenance_records`, `maintenance_evidence`, su trigger y la vista `service_orders`.
 - Dependencias: objetos de `02`, más `reports`, `maintenances` y `profiles` existentes.
 
@@ -81,7 +80,7 @@ Cada archivo debe ejecutarse con `psql -X --set ON_ERROR_STOP=1 --single-transac
 - Revocar ejecución pública de las tres RPC y concederla a `authenticated`; conceder lectura de las dos vistas.
 - Dependencia crítica: `is_manager()` remoto debe conservar su firma y comportamiento.
 
-Ninguno de los tres archivos elimina `rls_auto_enable`, usuarios o perfiles. Aun así, debe añadirse una aserción de predespliegue que aborte si `rls_auto_enable` o `is_manager()` no existen.
+Ninguno de los tres archivos elimina `rls_auto_enable`, usuarios o perfiles. El preflight preparado aborta si `rls_auto_enable` o `is_manager()` no existen y también si el conjunto de tablas, RLS o políticas ya no coincide con la línea base revisada.
 
 ## Verificación y recuperación
 
@@ -91,7 +90,7 @@ Si una ejecución falla, `--single-transaction` revierte el archivo completo. Si
 
 - detener nuevas escrituras del módulo;
 - conservar los datos creados para análisis;
-- restaurar el respaldo en un proyecto nuevo y verificarlo;
+- restaurar el respaldo de `public` en PostgreSQL local desechable y verificarlo;
 - preferir conmutar a la restauración comprobada antes que ejecutar un `down` destructivo en producción;
 - preparar un script de reversión específico solo después de inventariar qué objetos y filas llegaron a crearse.
 

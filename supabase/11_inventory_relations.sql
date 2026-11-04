@@ -7,9 +7,14 @@ alter table public.reports
 alter table public.maintenances
   add column if not exists equipment_id uuid references public.equipment_assets(id),
   add column if not exists maintenance_program_id bigint references public.maintenance_programs(id),
-  add column if not exists priority text not null default 'ordinaria'
-    check (priority in ('critica', 'alta', 'ordinaria')),
+  add column if not exists priority text
+    check (priority is null or priority in ('critica', 'alta', 'ordinaria')),
   add column if not exists completed_at timestamptz;
+
+-- Preserve legacy rows as NULL instead of assigning a priority that was never recorded.
+-- New service orders receive the ordinary priority unless the caller provides another value.
+alter table public.maintenances
+  alter column priority set default 'ordinaria';
 
 create index if not exists reports_equipment_idx on public.reports(equipment_id);
 create index if not exists maintenances_equipment_idx on public.maintenances(equipment_id);

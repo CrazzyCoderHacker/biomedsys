@@ -1,6 +1,6 @@
-# Entorno Supabase Cloud de desarrollo
+# Entorno Supabase Cloud de desarrollo (plan descartado)
 
-Estado de preparación: 2026-11-04. No se ha creado ningún recurso remoto ni se ha modificado el proyecto oficial.
+Estado: descartado por decisión del usuario el 2026-11-04. No se creó ningún recurso remoto. El despliegue controlado continuará sobre el proyecto oficial únicamente después de un respaldo recuperable y una aprobación expresa.
 
 ## Disponibilidad comprobada
 

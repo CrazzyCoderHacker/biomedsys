@@ -36,8 +36,10 @@ New-Item -ItemType Directory -Path $resolvedOutput -Force | Out-Null
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $prefix = Join-Path $resolvedOutput "biomedgest-pre-inventory-$timestamp"
 $customDump = "$prefix.dump"
+$publicDump = "$prefix-public.dump"
 $schemaDump = "$prefix-schema.sql"
 $contentsFile = "$prefix-contents.txt"
+$publicContentsFile = "$prefix-public-contents.txt"
 $hashFile = "$prefix-sha256.txt"
 
 $previousPgPassFile = $env:PGPASSFILE
@@ -60,6 +62,18 @@ try {
     --port=$Port `
     --username=$DatabaseUser `
     --dbname=$DatabaseName `
+    --schema=public `
+    --format=custom `
+    --no-owner `
+    --no-acl `
+    --file=$publicDump
+  if ($LASTEXITCODE -ne 0) { throw "Falló pg_dump verificable del esquema public." }
+
+  & $pgDump `
+    --host=$DatabaseHost `
+    --port=$Port `
+    --username=$DatabaseUser `
+    --dbname=$DatabaseName `
     --schema-only `
     --no-owner `
     --no-acl `
@@ -69,14 +83,20 @@ try {
   & $pgRestore --list $customDump | Set-Content -LiteralPath $contentsFile -Encoding utf8
   if ($LASTEXITCODE -ne 0) { throw "pg_restore no pudo leer el respaldo generado." }
 
-  $hashes = Get-FileHash -Algorithm SHA256 -LiteralPath $customDump, $schemaDump, $contentsFile
+  & $pgRestore --list $publicDump | Set-Content -LiteralPath $publicContentsFile -Encoding utf8
+  if ($LASTEXITCODE -ne 0) { throw "pg_restore no pudo leer el respaldo de public." }
+
+  $hashes = Get-FileHash -Algorithm SHA256 -LiteralPath `
+    $customDump, $publicDump, $schemaDump, $contentsFile, $publicContentsFile
   $hashes | ForEach-Object { "{0}  {1}" -f $_.Hash.ToLowerInvariant(), $_.Path } |
     Set-Content -LiteralPath $hashFile -Encoding ascii
 
   [pscustomobject]@{
     Backup = $customDump
+    PublicBackup = $publicDump
     Schema = $schemaDump
     Contents = $contentsFile
+    PublicContents = $publicContentsFile
     Checksums = $hashFile
     VerifiedReadable = $true
   }
