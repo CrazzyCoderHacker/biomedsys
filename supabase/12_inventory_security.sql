@@ -71,18 +71,30 @@ for select to authenticated using (
 );
 
 drop policy if exists "assigned technicians write maintenance records" on public.maintenance_records;
-create policy "assigned technicians write maintenance records" on public.maintenance_records
-for all to authenticated using (
-  public.is_manager() or exists (
+drop policy if exists "managers manage maintenance records" on public.maintenance_records;
+create policy "managers manage maintenance records" on public.maintenance_records
+for all to authenticated using (public.is_manager()) with check (public.is_manager());
+
+drop policy if exists "assigned technicians create maintenance records" on public.maintenance_records;
+create policy "assigned technicians create maintenance records" on public.maintenance_records
+for insert to authenticated with check (
+  performed_by = auth.uid() and exists (
+    select 1 from public.maintenances m
+    where m.id = maintenance_id and m.assigned_to = auth.uid()
+  )
+);
+
+drop policy if exists "assigned technicians update maintenance records" on public.maintenance_records;
+create policy "assigned technicians update maintenance records" on public.maintenance_records
+for update to authenticated using (
+  performed_by = auth.uid() and exists (
     select 1 from public.maintenances m
     where m.id = maintenance_id and m.assigned_to = auth.uid()
   )
 ) with check (
-  public.is_manager() or (
-    performed_by = auth.uid() and exists (
-      select 1 from public.maintenances m
-      where m.id = maintenance_id and m.assigned_to = auth.uid()
-    )
+  performed_by = auth.uid() and exists (
+    select 1 from public.maintenances m
+    where m.id = maintenance_id and m.assigned_to = auth.uid()
   )
 );
 
@@ -105,6 +117,10 @@ for insert to authenticated with check (
     )
   )
 );
+
+drop policy if exists "managers manage maintenance evidence" on public.maintenance_evidence;
+create policy "managers manage maintenance evidence" on public.maintenance_evidence
+for all to authenticated using (public.is_manager()) with check (public.is_manager());
 
 drop policy if exists "assigned technicians read linked reports" on public.reports;
 create policy "assigned technicians read linked reports" on public.reports

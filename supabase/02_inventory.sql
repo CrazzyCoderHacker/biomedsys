@@ -58,6 +58,7 @@ create table if not exists public.equipment_locations (
   name text not null,
   active boolean not null default true,
   created_at timestamptz not null default now(),
+  unique (id, hospital_area_id),
   unique (hospital_area_id, name)
 );
 
@@ -83,7 +84,7 @@ create table if not exists public.equipment_assets (
   manufacture_year smallint check (manufacture_year between 1950 and 2100),
   acquisition_year smallint check (acquisition_year between 1950 and 2100),
   hospital_area_id bigint not null references public.hospital_areas(id),
-  location_id bigint references public.equipment_locations(id),
+  location_id bigint,
   custodian_location_text text,
   status public.equipment_status not null default 'desconocido',
   source_batch_id uuid references public.inventory_import_batches(id),
@@ -96,6 +97,8 @@ create table if not exists public.equipment_assets (
   constraint acquisition_not_before_manufacture check (
     manufacture_year is null or acquisition_year is null or acquisition_year >= manufacture_year
   ),
+  constraint equipment_assets_location_area_fkey foreign key (location_id, hospital_area_id)
+    references public.equipment_locations(id, hospital_area_id),
   unique (source_batch_id, source_sheet, source_row)
 );
 

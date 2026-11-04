@@ -32,3 +32,13 @@ El orden futuro de ejecución está documentado en `supabase/schema.sql`. Codex 
 $env:BIOMEDGEST_INVENTORY_XLSX='C:\ruta\a\Final.xlsx'
 .\.venv-inventory\Scripts\python -m unittest discover -s scripts\inventory -p 'test_*.py' -v
 ```
+
+## Validación integral con PostgreSQL local
+
+El siguiente comando crea un clúster temporal aislado en la carpeta temporal de Windows, genera de nuevo el paquete desde el Excel, aplica todos los módulos SQL, importa los datos y prueba las políticas de `usuario`, `tecnico` y `jefe`. Después repite migraciones e importación para comprobar idempotencia y elimina el entorno desechable.
+
+```powershell
+.\scripts\inventory\validate_local_postgres.ps1 -SourceXlsx 'C:\ruta\a\Final.xlsx'
+```
+
+Requiere PostgreSQL 17 y Python con las dependencias de `requirements.txt`. No usa conexiones remotas. Para conservar temporalmente el clúster y sus registros de diagnóstico, agregue `-KeepData`.
