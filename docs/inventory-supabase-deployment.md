@@ -144,3 +144,18 @@ Si una ejecución falla, `--single-transaction` revierte el archivo completo. Si
 - preparar un script de reversión específico solo después de inventariar qué objetos y filas llegaron a crearse.
 
 No importar `Final.xlsx` durante este despliegue. La importación requiere una aprobación separada después de verificar esquema, RLS, RPC y los tres roles.
+
+## Intento de Fase 3 y reversión verificada
+
+El 4 de noviembre de 2026 se intentó la importación autorizada de `Final.xlsx` en el proyecto oficial `yvqccoavcwfzcxrfvsjs`. Antes de ejecutar se comprobó lo siguiente:
+
+- la rama local era `feat/inventory-module`;
+- el SHA-256 del Excel era `301fb5ea17c99e0529646c18bd5c6f7a2ca09a9222df0c06ecb551e58e75d1d5`;
+- una regeneración independiente produjo exactamente el mismo `inventory_import.sql`, con SHA-256 `ff70548e26d9b2bd5083dc4006d536aa238c8ecbf4213e8a5ab5ae68baacc87b`;
+- las 13 tablas de inventario estaban vacías;
+- los conteos originales seguían en 3 perfiles, 3 usuarios Auth y 3 filas en `maintenance_catalog`, con las otras tablas originales vacías;
+- permanecían 25 tablas públicas, 25 tablas con RLS y 51 políticas públicas.
+
+El paquete se ejecutó dentro de una sola transacción con guardas previas y aserciones antes del `COMMIT`. La aserción adicional `verify: duplicate serial assets` falló porque contó también los seis valores marcadores `S/N` como seriales repetidos. Los dos duplicados reales son `EQ-000052` y `EQ-000053`, ambos con el serial `3979000122`; el paquete también conserva seis marcadores `S/N` con `serial_is_placeholder = true`.
+
+La excepción ocurrió antes del `COMMIT` y PostgreSQL revirtió el lote completo. Un postflight independiente confirmó que todas las tablas del inventario volvieron a cero y que los conteos originales, RLS y políticas permanecieron sin cambios. No se hizo un segundo intento. Para reintentar debe autorizarse otra ejecución y la aserción debe excluir `serial_is_placeholder = true`; no se debe cambiar ningún dato del Excel.
