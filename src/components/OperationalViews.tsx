@@ -10,6 +10,7 @@ import {
 import {
   listDocumentLibrary,
   listMaintenanceOverview,
+  updateAssignedMaintenanceStatus,
   type DocumentLibraryItem,
   type MaintenanceCatalogItem,
   type MaintenanceSummary,
@@ -149,13 +150,13 @@ export function MaintenanceView({ role }: { role: Role }) {
           </div>
           <CalendarDays size={21} />
         </div>
-        <MaintenanceTable items={state.maintenances} />
+        <MaintenanceTable items={state.maintenances} role={role} onChanged={state.retry} />
       </section>
     </>
   )
 }
 
-export function ServiceOrdersView() {
+export function ServiceOrdersView({ role }: { role: Role }) {
   const state = useMaintenanceOverview()
   if (state.loading)
     return <Loading label="Consultando órdenes de servicio..." />
@@ -167,13 +168,49 @@ export function ServiceOrdersView() {
         description="Mantenimientos creados en Supabase; los formularios técnicos detallados se habilitarán cuando exista una orden seleccionada."
       />
       <section className="panel orders-panel">
-        <MaintenanceTable items={state.maintenances} />
+        <MaintenanceTable items={state.maintenances} role={role} onChanged={state.retry} />
       </section>
     </>
   )
 }
 
-function MaintenanceTable({ items }: { items: MaintenanceSummary[] }) {
+function MaintenanceStatusEditor({ item, onChanged }: { item: MaintenanceSummary; onChanged: () => void }) {
+  const [status, setStatus] = useState(item.status)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
+
+  useEffect(() => setStatus(item.status), [item.status])
+
+  async function save() {
+    setSaving(true)
+    setError("")
+    try {
+      await updateAssignedMaintenanceStatus(item.id, status)
+      onChanged()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "No fue posible actualizar la orden.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="maintenance-status-editor">
+      <select aria-label={`Estado de ${item.maintenance_number}`} value={status} onChange={(event) => setStatus(event.target.value as MaintenanceSummary["status"])}>
+        <option value="programado">Programado</option>
+        <option value="en_proceso">En proceso</option>
+        <option value="completado">Completado</option>
+        <option value="cancelado">Cancelado</option>
+      </select>
+      <button type="button" className="row-action" disabled={saving || status === item.status} onClick={save}>
+        {saving ? "Guardando..." : "Guardar"}
+      </button>
+      {error && <small className="form-error" role="alert">{error}</small>}
+    </div>
+  )
+}
+
+function MaintenanceTable({ items, role, onChanged }: { items: MaintenanceSummary[]; role: Role; onChanged: () => void }) {
   if (items.length === 0)
     return (
       <div className="empty-state">
@@ -193,6 +230,7 @@ function MaintenanceTable({ items }: { items: MaintenanceSummary[] }) {
             <th>Estado</th>
             <th>Prioridad</th>
             <th>Programación</th>
+            {(role === "jefe" || role === "tecnico") && <th>Actualizar</th>}
           </tr>
         </thead>
         <tbody>
@@ -206,6 +244,7 @@ function MaintenanceTable({ items }: { items: MaintenanceSummary[] }) {
               <td>{item.status.replace(/_/g, " ")}</td>
               <td>{item.priority || "Sin registrar"}</td>
               <td>{formatDate(item.scheduled_at)}</td>
+              {(role === "jefe" || role === "tecnico") && <td><MaintenanceStatusEditor item={item} onChanged={onChanged} /></td>}
             </tr>
           ))}
         </tbody>
@@ -251,7 +290,7 @@ export function DocumentsView() {
     <>
       <PageIntro
         title="Documentos"
-        description="Manuales y referencias vinculados al inventario real."
+        description="Vínculos registrados para manuales y referencias. Su registro no garantiza que el archivo externo siga disponible."
       />
       <section className="panel">
         <div className="document-list">
@@ -271,12 +310,12 @@ export function DocumentsView() {
                     {document.document_type.replace(/_/g, " ")} ·{" "}
                     {document.linkedEquipment} equipo
                     {document.linkedEquipment === 1 ? "" : "s"} ·{" "}
-                    {document.review_status}
+                    Vínculo registrado · {document.review_status}
                   </span>
                 </div>
                 {href ? (
                   <a href={href} target="_blank" rel="noreferrer">
-                    Abrir <ExternalLink size={14} />
+                    Abrir vínculo <ExternalLink size={14} />
                   </a>
                 ) : (
                   <span className="badge badge-warning">

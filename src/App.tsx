@@ -5,10 +5,13 @@ import {
   getCurrentProfile,
   isSupabaseConfigured,
   listReports,
+  updateReportWorkflow,
   signInWithInstitutionalId,
   supabase,
   type CreateReportInput,
+  type EquipmentInventoryDetail,
   type Profile,
+  type ReportSummary,
   type Role,
 } from "./lib/supabase"
 
@@ -58,6 +61,7 @@ import {
 } from "./components/AdminViews"
 
 import { EquipmentDetail, Inventory } from "./components/InventoryViews"
+import { EquipmentReportSelector } from "./components/EquipmentReportSelector"
 
 import { Dashboard } from "./components/DashboardViews"
 
@@ -459,6 +463,34 @@ function PageIntro({
   )
 }
 
+function ReportWorkflowEditor({ report, onSaved }: { report: ReportSummary; onSaved: (report: ReportSummary) => void }) {
+  const [priority, setPriority] = useState(report.priority)
+  const [status, setStatus] = useState(report.status)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
+
+  async function save() {
+    setSaving(true)
+    setError("")
+    try {
+      onSaved(await updateReportWorkflow(report.report_number, { priority, status }))
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "No fue posible actualizar el reporte.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="report-workflow-editor">
+      <label><span>Prioridad</span><select aria-label={`Prioridad de ${report.report_number}`} value={priority} onChange={(event) => setPriority(event.target.value)}><option>Crítica</option><option>Alta</option><option>Ordinaria</option></select></label>
+      <label><span>Estado</span><select aria-label={`Estado de ${report.report_number}`} value={status} onChange={(event) => setStatus(event.target.value)}><option>Recibido</option><option>Clasificado</option><option>Asignado</option><option>En atención</option><option>Resuelto</option><option>Cerrado</option></select></label>
+      <button type="button" className="row-action" disabled={saving || (priority === report.priority && status === report.status)} onClick={save}>{saving ? "Guardando..." : "Guardar gestión"}</button>
+      {error && <small className="form-error" role="alert">{error}</small>}
+    </div>
+  )
+}
+
 function ReportTray({
   role,
   setView,
@@ -613,13 +645,11 @@ function ReportTray({
                     {report.equipment_identifier} · {report.service}
                   </small>
                 </div>
-                <Badge>{report.priority}</Badge>
-                <Badge>{report.status}</Badge>
                 {role === "jefe" && (
-                  <Button variant="secondary" onClick={() => setView("orden")}>
-                    Ver órdenes
-                  </Button>
+                  <ReportWorkflowEditor report={report} onSaved={(updated) => setReports((current) => current.map((item) => item.report_number === updated.report_number ? updated : item))} />
                 )}
+                {role !== "jefe" && <><Badge>{report.priority}</Badge><Badge>{report.status}</Badge></>}
+                {role === "jefe" && <Button variant="secondary" onClick={() => setView("orden")}>Ver órdenes</Button>}
                 <ChevronRight size={18} />
               </article>
             ))}
@@ -630,7 +660,7 @@ function ReportTray({
   )
 }
 
-function ReportModal({ onClose }: { onClose: () => void }) {
+export function ReportModal({ onClose, role }: { onClose: () => void; role: Role }) {
   const [sent, setSent] = useState(false)
 
   const [reportNumber, setReportNumber] = useState("")
@@ -639,7 +669,12 @@ function ReportModal({ onClose }: { onClose: () => void }) {
 
   const [saving, setSaving] = useState(false)
 
+  const [selectedEquipment, setSelectedEquipment] =
+    useState<EquipmentInventoryDetail | null>(null)
+
   const [form, setForm] = useState<CreateReportInput>({
+    equipmentId: null,
+
     equipmentIdentifier: "",
 
     eventDate: new Date().toISOString().slice(0, 10),
@@ -718,17 +753,38 @@ function ReportModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
         <div className="form-grid">
-          <label className="field span-2">
+          <div className="field span-2">
             <span>Equipo o número de inventario *</span>
-            <div className="input-action">
-              <input
-                required
-                value={form.equipmentIdentifier}
-                onChange={(event) =>
-                  updateField("equipmentIdentifier", event.target.value)
-                }
-                placeholder="Ej. EQ-000293 o Monitor IntelliVue"
-              />
+            <EquipmentReportSelector
+              role={role}
+              value={form.equipmentIdentifier}
+              selected={selectedEquipment}
+              onInputChange={(value) => {
+                setSelectedEquipment(null)
+                setForm((current) => ({
+                  ...current,
+                  equipmentId: null,
+                  equipmentIdentifier: value,
+                }))
+              }}
+              onSelect={(equipment) => {
+                setSelectedEquipment(equipment)
+                setForm((current) => ({
+                  ...current,
+                  equipmentId: equipment.id,
+                  equipmentIdentifier: equipment.inventory_code,
+                  location: current.location || equipment.location || "",
+                  manufacturer: current.manufacturer || equipment.manufacturer,
+                  modelSerial:
+                    current.modelSerial ||
+                    [equipment.model, equipment.serial_number]
+                      .filter(Boolean)
+                      .join(" / "),
+                }))
+                setError("")
+              }}
+            />
+            <div className="report-qr-action">
               <button
                 type="button"
                 disabled
@@ -737,15 +793,23 @@ function ReportModal({ onClose }: { onClose: () => void }) {
                 <QrCode size={19} /> QR pendiente
               </button>
             </div>
-          </label>
+          </div>
           <label className="field">
             <span>Fecha del evento *</span>
             <input
               required
               type="date"
+              lang="es-MX"
               value={form.eventDate}
               onChange={(event) => updateField("eventDate", event.target.value)}
             />
+            {form.eventDate && (
+              <small>
+                {new Intl.DateTimeFormat("es-MX", { dateStyle: "long" }).format(
+                  new Date(`${form.eventDate}T12:00:00`),
+                )}
+              </small>
+            )}
           </label>
           <label className="field">
             <span>Tipo de evento *</span>
@@ -1012,7 +1076,7 @@ export default function App() {
               onBack={() => setView("inventario")}
             />
           )}
-          {view === "orden" && <ServiceOrdersView />}
+          {view === "orden" && <ServiceOrdersView role={role} />}
           {view === "calendario" && <MaintenanceView role={role} />}
           {view === "avisos" && <NoticesView />}
           {view === "cotizaciones" && <QuotationsView />}
@@ -1029,7 +1093,7 @@ export default function App() {
         </main>
       </div>
       <BottomNav role={role} view={view} setView={setView} />
-      {reportOpen && <ReportModal onClose={() => setReportOpen(false)} />}
+      {reportOpen && <ReportModal role={role} onClose={() => setReportOpen(false)} />}
     </div>
   )
 }

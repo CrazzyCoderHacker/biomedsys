@@ -56,6 +56,17 @@ function messageOf(error: unknown) {
   return error instanceof Error ? error.message : "No fue posible completar la operación."
 }
 
+function formatDateMx(value: string | null, includeTime = false) {
+  if (!value) return ""
+  const date = includeTime
+    ? new Date(value)
+    : new Date(`${value}T12:00:00`)
+  if (Number.isNaN(date.getTime())) return "Fecha no válida"
+  return new Intl.DateTimeFormat("es-MX", includeTime
+    ? { dateStyle: "long", timeStyle: "short" }
+    : { dateStyle: "long" }).format(date)
+}
+
 function AssetEditor({ data, onSave }: {
   data: InventoryAdministrationData
   onSave: (asset: InventoryAdminAsset) => Promise<void>
@@ -67,8 +78,16 @@ function AssetEditor({ data, onSave }: {
 
   async function submit(event: FormEvent) {
     event.preventDefault()
-    setSaving(true)
     setMessage("")
+    if (asset.manufacture_year && asset.acquisition_year && asset.acquisition_year < asset.manufacture_year) {
+      setMessage("El año de adquisición no puede ser anterior al año de fabricación.")
+      return
+    }
+    if (!asset.hospital_area_id) {
+      setMessage("Selecciona un área hospitalaria.")
+      return
+    }
+    setSaving(true)
     try {
       await onSave(asset)
       setMessage("Cambios guardados y registrados en auditoría.")
@@ -130,6 +149,10 @@ function PreventiveEditor({ equipmentId, bundle, data, api, onChanged }: {
       setMessage("Indica el fundamento de la periodicidad.")
       return
     }
+    if (!form!.interval_months && (form!.reference_date || form!.last_completed_on)) {
+      setMessage("Define primero una periodicidad para calcular vencimientos.")
+      return
+    }
     try {
       await api.configureProgram(equipmentId, form!)
       await onChanged()
@@ -141,8 +164,11 @@ function PreventiveEditor({ equipmentId, bundle, data, api, onChanged }: {
     event.preventDefault()
     setMessage("")
     if (!scheduledAt) { setMessage("Selecciona fecha y hora."); return }
+    const scheduledDate = new Date(scheduledAt)
+    if (Number.isNaN(scheduledDate.getTime())) { setMessage("La fecha de programación no es válida."); return }
+    if (scheduledDate.getTime() <= Date.now()) { setMessage("La programación debe tener una fecha y hora futura."); return }
     try {
-      await api.schedule({ equipmentId, programId, scheduledAt: new Date(scheduledAt).toISOString(), assignedTo: assignedTo || null, priority })
+      await api.schedule({ equipmentId, programId, scheduledAt: scheduledDate.toISOString(), assignedTo: assignedTo || null, priority })
       setMessage("Orden preventiva creada. Ya aparecerá en mantenimiento y calendario.")
     } catch (error) { setMessage(messageOf(error)) }
   }
@@ -155,17 +181,17 @@ function PreventiveEditor({ equipmentId, bundle, data, api, onChanged }: {
         <div className="form-grid">
           <label className="field"><span>Periodicidad (meses)</span><input type="number" min="1" value={form.interval_months ?? ""} onChange={(e) => setForm({ ...form, interval_months: nullableNumber(e.target.value) })} /></label>
           <label className="field"><span>Fundamento</span><input placeholder="Manual, política o criterio aprobado" value={form.periodicity_basis || ""} onChange={(e) => setForm({ ...form, periodicity_basis: e.target.value || null })} /></label>
-          <label className="field"><span>Fecha de referencia</span><input type="date" value={form.reference_date || ""} onChange={(e) => setForm({ ...form, reference_date: e.target.value || null })} /></label>
-          <label className="field"><span>Último mantenimiento</span><input type="date" value={form.last_completed_on || ""} onChange={(e) => setForm({ ...form, last_completed_on: e.target.value || null })} /></label>
+          <label className="field"><span>Fecha de referencia</span><input type="date" lang="es-MX" value={form.reference_date || ""} onChange={(e) => setForm({ ...form, reference_date: e.target.value || null })} />{form.reference_date && <small>{formatDateMx(form.reference_date)}</small>}</label>
+          <label className="field"><span>Último mantenimiento</span><input type="date" lang="es-MX" value={form.last_completed_on || ""} onChange={(e) => setForm({ ...form, last_completed_on: e.target.value || null })} />{form.last_completed_on && <small>{formatDateMx(form.last_completed_on)}</small>}</label>
         </div>
         <label className="field"><span>Notas</span><textarea value={form.periodicity_notes || ""} onChange={(e) => setForm({ ...form, periodicity_notes: e.target.value || null })} /></label>
-        <p>Próximo vencimiento: <strong>{form.next_due_on || "Se calculará al guardar si existe una fecha base"}</strong></p>
+        <p>Próximo vencimiento: <strong>{form.next_due_on ? formatDateMx(form.next_due_on) : "Se calculará al guardar si existe una fecha base"}</strong></p>
         <button className="btn btn-secondary" type="submit"><Save size={17} /> Guardar periodicidad</button>
       </form>
       <form className="inventory-schedule-form" onSubmit={schedule}>
         <h4>Crear orden preventiva</h4>
         <div className="form-grid">
-          <label className="field"><span>Fecha y hora</span><input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} /></label>
+          <label className="field"><span>Fecha y hora</span><input type="datetime-local" lang="es-MX" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />{scheduledAt && <small>{formatDateMx(scheduledAt, true)}</small>}</label>
           <label className="field"><span>Técnico</span><select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)}><option value="">Sin asignar</option>{data.technicians.map((technician) => <option key={technician.id} value={technician.id}>{technician.full_name}</option>)}</select></label>
           <label className="field"><span>Prioridad</span><select value={priority} onChange={(e) => setPriority(e.target.value as typeof priority)}><option value="ordinaria">Ordinaria</option><option value="alta">Alta</option><option value="critica">Crítica</option></select></label>
         </div>
@@ -182,7 +208,7 @@ function IssueReview({ issue, reviews, api, onChanged }: {
   api: InventoryAdministrationApi
   onChanged: () => Promise<void>
 }) {
-  const [status, setStatus] = useState<"confirmado" | "corregido" | "descartado">("confirmado")
+  const [status, setStatus] = useState<"" | "confirmado" | "corregido" | "descartado">("")
   const [notes, setNotes] = useState("")
   const [justification, setJustification] = useState("")
   const [evidence, setEvidence] = useState("")
@@ -191,6 +217,7 @@ function IssueReview({ issue, reviews, api, onChanged }: {
 
   async function submit(event: FormEvent) {
     event.preventDefault()
+    if (!status) { setMessage("Selecciona el resultado de la revisión."); return }
     if (!notes.trim() || !justification.trim()) { setMessage("Las observaciones y la justificación son obligatorias."); return }
     try {
       await api.reviewIssue({ issueId: issue.id, status, notes, justification, evidenceReference: evidence || null })
@@ -206,7 +233,7 @@ function IssueReview({ issue, reviews, api, onChanged }: {
       <span>Estado: {issue.review_status}</span>
       {history.length > 0 && <details><summary>Historial ({history.length})</summary>{history.map((review) => <p key={review.id}><b>{review.review_status}</b> · {new Date(review.reviewed_at).toLocaleString("es-MX")}<br />{review.notes}<br /><small>{review.justification}</small></p>)}</details>}
       <form onSubmit={submit}>
-        <label className="field"><span>Resultado</span><select value={status} onChange={(e) => setStatus(e.target.value as typeof status)}><option value="confirmado">Confirmado</option><option value="corregido">Corregido</option><option value="descartado">Descartado</option></select></label>
+        <label className="field"><span>Resultado</span><select value={status} onChange={(e) => setStatus(e.target.value as typeof status)}><option value="" disabled>Seleccionar resultado</option><option value="confirmado">Confirmado</option><option value="corregido">Corregido</option><option value="descartado">Descartado</option></select></label>
         <label className="field"><span>Observaciones</span><textarea value={notes} onChange={(e) => setNotes(e.target.value)} /></label>
         <label className="field"><span>Justificación</span><textarea value={justification} onChange={(e) => setJustification(e.target.value)} /></label>
         <label className="field"><span>Referencia de evidencia (opcional)</span><input value={evidence} onChange={(e) => setEvidence(e.target.value)} /></label>

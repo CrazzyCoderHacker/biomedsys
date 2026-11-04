@@ -380,6 +380,8 @@ export async function getCurrentProfile() {
 }
 
 export type CreateReportInput = {
+  equipmentId: string | null
+
   equipmentIdentifier: string
 
   eventDate: string
@@ -401,28 +403,21 @@ export type CreateReportInput = {
   actionTaken: string
 }
 
-export async function createReport(input: CreateReportInput) {
-  if (!supabase) {
-    throw new Error("Supabase no está configurado.")
+export async function createReport(
+  input: CreateReportInput,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  if (!input.equipmentId) {
+    throw new Error("Selecciona explícitamente un equipo registrado.")
   }
 
-  const directoryMatches = await searchEquipmentDirectory(
-    input.equipmentIdentifier,
-    supabase,
-  )
-
-  const exactEquipment = directoryMatches.find(
-    (item) =>
-      item.inventory_code.toLocaleLowerCase() ===
-      input.equipmentIdentifier.trim().toLocaleLowerCase(),
-  )
-
-  const { data, error } = await supabase
+  const { data, error } = await configuredClient
 
     .from("reports")
 
     .insert({
-      equipment_id: exactEquipment?.id ?? null,
+      equipment_id: input.equipmentId,
 
       equipment_identifier: input.equipmentIdentifier,
 
@@ -488,6 +483,22 @@ export async function listReports() {
   if (error) throw error
 
   return data as ReportSummary[]
+}
+
+export async function updateReportWorkflow(
+  reportNumber: string,
+  changes: Pick<ReportSummary, "priority" | "status">,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient
+    .from("reports")
+    .update(changes)
+    .eq("report_number", reportNumber)
+    .select("report_number, equipment_identifier, description, service, priority, status, created_at")
+    .single<ReportSummary>()
+  if (error) throw error
+  return data
 }
 
 export async function loadDashboardData(role: Role): Promise<DashboardData> {
@@ -568,6 +579,20 @@ export async function listMaintenanceOverview() {
 
     maintenances: (maintenanceResult.data || []) as MaintenanceSummary[],
   }
+}
+
+export async function updateAssignedMaintenanceStatus(
+  maintenanceId: number,
+  status: MaintenanceSummary["status"],
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc(
+    "update_assigned_maintenance_status",
+    { target_maintenance_id: maintenanceId, new_status: status },
+  )
+  if (error) throw error
+  return data as MaintenanceSummary
 }
 
 export async function listDocumentLibrary() {

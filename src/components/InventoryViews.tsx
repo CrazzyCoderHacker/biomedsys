@@ -338,8 +338,8 @@ function DetailContent({ bundle, role, onChanged }: { bundle: EquipmentInventory
                       return (
                         <article key={document.id}>
                           <FileText size={20} />
-                          <div><strong>{document.title || (document.document_type === "manual_usuario" ? "Manual de usuario" : "Manual de servicio")}</strong><span>{document.document_type.replace(/_/g, " ")} · {document.review_status}</span></div>
-                          {href ? <a href={href} target="_blank" rel="noreferrer">Abrir <ExternalLink size={14} /></a> : <Badge tone="warning">Enlace por revisar</Badge>}
+                          <div><strong>{document.title || (document.document_type === "manual_usuario" ? "Manual de usuario" : "Manual de servicio")}</strong><span>{document.document_type.replace(/_/g, " ")} · Vínculo registrado · {document.review_status}</span></div>
+                          {href ? <a href={href} target="_blank" rel="noreferrer" title="Abrir el vínculo registrado; la disponibilidad del archivo depende del sitio externo">Abrir vínculo <ExternalLink size={14} /></a> : <Badge tone="warning">Enlace por revisar</Badge>}
                         </article>
                       );
                     })}
