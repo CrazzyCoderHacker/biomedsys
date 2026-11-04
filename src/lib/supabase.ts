@@ -32,6 +32,29 @@ export type AuditEntry = {
 
 export type Quote = { id: number; quote_number: string; supplier: string; equipment_description: string; amount: number; currency: string; status: string; notes: string | null; created_at: string };
 
+export type EquipmentStatus = "operativo" | "en_reparacion" | "fuera_de_servicio" | "baja" | "desconocido";
+
+export type EquipmentDirectoryItem = {
+  id: string;
+  inventory_code: string;
+  equipment_type: string;
+  manufacturer: string;
+  model: string;
+  hospital_area: string | null;
+  location: string | null;
+  status: EquipmentStatus;
+};
+
+export type EquipmentInventoryDetail = EquipmentDirectoryItem & {
+  serial_number: string | null;
+  manufacture_year: number | null;
+  acquisition_year: number | null;
+  custodian_location_text: string | null;
+  requires_review: boolean;
+  current_risk_score: number | null;
+  current_risk_category: "bajo" | "medio" | "alto" | null;
+};
+
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -203,4 +226,24 @@ export async function createAccessRequest(input: { institutionalId: string; full
   if (!supabase) throw new Error("Supabase no está configurado.");
   const { error } = await supabase.from("user_access_requests").insert({ institutional_id: input.institutionalId, full_name: input.fullName, role: input.role, department: input.department || null });
   if (error) throw error;
+}
+
+export async function searchEquipmentDirectory(searchTerm = "") {
+  if (!supabase) throw new Error("Supabase no está configurado.");
+  const { data, error } = await supabase.rpc("search_equipment_directory", {
+    search_term: searchTerm.trim() || null,
+  });
+  if (error) throw error;
+  return (data || []) as EquipmentDirectoryItem[];
+}
+
+export async function getEquipmentInventoryDetail(equipmentId: string) {
+  if (!supabase) throw new Error("Supabase no está configurado.");
+  const { data, error } = await supabase
+    .from("equipment_inventory_detail")
+    .select("id, inventory_code, equipment_type, manufacturer, model, serial_number, manufacture_year, acquisition_year, hospital_area, location, custodian_location_text, status, requires_review, current_risk_score, current_risk_category")
+    .eq("id", equipmentId)
+    .single();
+  if (error) throw error;
+  return data as EquipmentInventoryDetail;
 }

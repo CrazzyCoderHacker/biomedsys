@@ -1,0 +1,62 @@
+{
+  "source_file": "Final.xlsx",
+  "source_sha256": "301fb5ea17c99e0529646c18bd5c6f7a2ca09a9222df0c06ecb551e58e75d1d5",
+  "source_unchanged": true,
+  "batch_id": "ee21d240-cd92-5274-b5fa-4c16c52f4401",
+  "workbook": {
+    "sheet_names": [
+      "Hoja1",
+      "Hoja2"
+    ],
+    "inventory_headers": [
+      "#",
+      "Equipo",
+      "Marca",
+      "Modelo",
+      "SN",
+      "Fabricación",
+      "Adquisición",
+      "Ubicación",
+      "Guarda de equipo",
+      "Tipo de riesgo",
+      "Manual usuario",
+      "Manual mantenimiento",
+      "Rutina de mantenimiento"
+    ],
+    "inventory_max_row": 101,
+    "inventory_max_column": 13,
+    "risk_max_row": 112,
+    "risk_max_column": 14
+  },
+  "counts": {
+    "assets": 100,
+    "equipment_types": 37,
+    "manufacturers": 25,
+    "models": 55,
+    "hospital_areas": 15,
+    "specific_locations": 63,
+    "documents": 199,
+    "maintenance_programs": 44,
+    "risk_assessments": 100,
+    "issues": 162,
+    "assets_requiring_review": 100
+  },
+  "issues_by_code": {
+    "duplicate_asset_signature": 7,
+    "duplicate_serial": 2,
+    "invalid_document_url": 4,
+    "location_case_variant": 4,
+    "maintenance_periodicity_missing": 100,
+    "missing_specific_location": 11,
+    "missing_user_manual": 1,
+    "risk_total_hardcoded": 10,
+    "same_manual_url": 16,
+    "serial_placeholder": 6,
+    "spelling_candidate": 1
+  },
+  "issues_by_severity": {
+    "advertencia": 134,
+    "error": 2,
+    "informativo": 26
+  }
+}

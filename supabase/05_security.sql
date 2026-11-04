@@ -54,27 +54,35 @@ drop policy if exists "managers update reports" on public.reports;
 create policy "managers update reports" on public.reports
 for update to authenticated using (public.is_manager()) with check (public.is_manager());
 
+drop policy if exists "clinicians read trainings" on public.trainings;
 create policy "clinicians read trainings" on public.trainings
 for select to authenticated using (true);
+drop policy if exists "engineers manage trainings" on public.trainings;
 create policy "engineers manage trainings" on public.trainings
 for all to authenticated using (
   exists (select 1 from public.profiles where id = auth.uid() and role = 'tecnico' and active)
   or public.is_manager()
 ) with check (instructor_id = auth.uid() or public.is_manager());
+drop policy if exists "participants read training links" on public.training_participants;
 create policy "participants read training links" on public.training_participants
 for select to authenticated using (participant_id = auth.uid() or public.is_manager());
+drop policy if exists "engineers manage training links" on public.training_participants;
 create policy "engineers manage training links" on public.training_participants
 for all to authenticated using (
   exists (select 1 from public.profiles where id = auth.uid() and role = 'tecnico' and active)
   or public.is_manager()
 ) with check (true);
 
+drop policy if exists "managers read quotes" on public.quotes;
 create policy "managers read quotes" on public.quotes
 for select to authenticated using (public.is_manager());
+drop policy if exists "managers manage quotes" on public.quotes;
 create policy "managers manage quotes" on public.quotes
 for all to authenticated using (public.is_manager()) with check (public.is_manager());
+drop policy if exists "managers read audit log" on public.audit_log;
 create policy "managers read audit log" on public.audit_log
 for select to authenticated using (public.is_manager());
 
+drop policy if exists "managers manage access requests" on public.user_access_requests;
 create policy "managers manage access requests" on public.user_access_requests
 for all to authenticated using (public.is_manager()) with check (public.is_manager() and requested_by = auth.uid());

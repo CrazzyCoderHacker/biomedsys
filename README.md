@@ -32,14 +32,16 @@ La persistencia usa la base PostgreSQL administrada por Supabase. El cliente web
 3. Ejecuta los scripts SQL en orden desde el SQL Editor de Supabase:
    - [`00_core.sql`](./supabase/00_core.sql)
    - [`01_users.sql`](./supabase/01_users.sql)
-   - [`02_inventory_pending.sql`](./supabase/02_inventory_pending.sql) — solo documenta el bloqueo; no crea inventario.
+   - [`02_inventory.sql`](./supabase/02_inventory.sql) — catálogos, activos, documentos, riesgos y programas preventivos.
    - [`03_maintenance.sql`](./supabase/03_maintenance.sql)
    - [`04_reports.sql`](./supabase/04_reports.sql)
    - [`07_training.sql`](./supabase/07_training.sql)
    - [`08_quotes.sql`](./supabase/08_quotes.sql)
    - [`09_audit.sql`](./supabase/09_audit.sql)
    - [`10_access_requests.sql`](./supabase/10_access_requests.sql)
+   - [`11_inventory_relations.sql`](./supabase/11_inventory_relations.sql) — enlaza inventario con reportes y órdenes.
    - [`05_security.sql`](./supabase/05_security.sql) — ejecutar al final, después de crear todas las tablas.
+   - [`12_inventory_security.sql`](./supabase/12_inventory_security.sql) — permisos del inventario para usuario, técnico y jefe.
 
    [`schema.sql`](./supabase/schema.sql) funciona como índice y define el orden. Los módulos tienen scripts separados para poder evolucionar usuarios, inventario, mantenimientos, reportes y futuras áreas sin mezclar cambios.
 4. En Authentication > Users crea cada cuenta con el correo técnico `<ID_DE_8_DIGITOS>@biomedgest.local` y su contraseña. Después vuelve a ejecutar [`01_users.sql`](./supabase/01_users.sql); su bloque final enlaza automáticamente los tres usuarios Auth con sus perfiles:
@@ -61,4 +63,4 @@ Finalmente ejecuta [`06_verify_demo_users.sql`](./supabase/06_verify_demo_users.
 
 Los prefijos admitidos son `00` para jefe, `01` para ingeniero biomédico y `02` para enfermería/médico. Las contraseñas las administra Supabase Auth y los reportes se insertan desde la interfaz autenticada. `reports.maintenance_id` permite relacionar un reporte con una orden de mantenimiento cuando exista; `equipment_identifier` se mantiene como texto temporal hasta que se defina el documento de inventario.
 
-El inventario no se crea hasta contar con el documento fuente solicitado. Cuando se reciba, se agregará un módulo SQL de inventario y se migrará `equipment_identifier` hacia una llave foránea validada, sin cambiar los módulos de usuarios ni autenticación.
+El inventario de `Final.xlsx` se prepara de forma reproducible con [`scripts/inventory`](./scripts/inventory/README.md). El proceso genera archivos de revisión y SQL, pero no ejecuta migraciones ni importa datos automáticamente. Consulta la [arquitectura del inventario](./docs/inventory-architecture.md) antes de aprobar una importación.

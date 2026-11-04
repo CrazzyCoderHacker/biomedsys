@@ -1,0 +1,163 @@
+﻿source_sheet,source_row,inventory_code,issue_code,severity,field_name,source_value,details
+Hoja1,2,EQ-000001,missing_specific_location,advertencia,Guarda de equipo,,Falta ubicación específica; se conserva el área hospitalaria.
+Hoja1,2,EQ-000001,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja2,5,EQ-000002,risk_total_hardcoded,informativo,Total,18,El total está guardado como valor; la base lo recalculará.
+Hoja1,3,EQ-000002,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,4,EQ-000003,missing_specific_location,advertencia,Guarda de equipo,,Falta ubicación específica; se conserva el área hospitalaria.
+Hoja1,4,EQ-000003,same_manual_url,informativo,Manuales,http://www.frankshospitalworkshop.com/equipment/documents/autoclaves/user_manuals/3M%20Steri-Vac%205XL%20-%20User%20manual.pdf,El mismo enlace se usa como manual de usuario y de servicio.
+Hoja2,6,EQ-000003,risk_total_hardcoded,informativo,Total,18,El total está guardado como valor; la base lo recalculará.
+Hoja1,4,EQ-000003,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,5,EQ-000004,missing_specific_location,advertencia,Guarda de equipo,,Falta ubicación específica; se conserva el área hospitalaria.
+Hoja1,5,EQ-000004,serial_placeholder,advertencia,SN,S/N,El número de serie es un marcador y requiere verificación física.
+Hoja1,5,EQ-000004,same_manual_url,informativo,Manuales,https://es.scribd.com/document/924857612/vap-5001-1,El mismo enlace se usa como manual de usuario y de servicio.
+Hoja2,7,EQ-000004,risk_total_hardcoded,informativo,Total,18,El total está guardado como valor; la base lo recalculará.
+Hoja1,5,EQ-000004,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,6,EQ-000005,same_manual_url,informativo,Manuales,https://www.manuales.mx/beurer/by-80/manual,El mismo enlace se usa como manual de usuario y de servicio.
+Hoja2,8,EQ-000005,risk_total_hardcoded,informativo,Total,9,El total está guardado como valor; la base lo recalculará.
+Hoja1,6,EQ-000005,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja2,9,EQ-000006,risk_total_hardcoded,informativo,Total,9,El total está guardado como valor; la base lo recalculará.
+Hoja1,7,EQ-000006,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,8,EQ-000007,same_manual_url,informativo,Manuales,https://es.scribd.com/document/590861578/BASCULA-BAME-420-Y-425#google_vignette,El mismo enlace se usa como manual de usuario y de servicio.
+Hoja2,10,EQ-000007,risk_total_hardcoded,informativo,Total,9,El total está guardado como valor; la base lo recalculará.
+Hoja1,8,EQ-000007,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,9,EQ-000008,same_manual_url,informativo,Manuales,https://es.scribd.com/document/590861578/BASCULA-BAME-420-Y-425#google_vignette,El mismo enlace se usa como manual de usuario y de servicio.
+Hoja2,11,EQ-000008,risk_total_hardcoded,informativo,Total,9,El total está guardado como valor; la base lo recalculará.
+Hoja1,9,EQ-000008,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,10,EQ-000009,same_manual_url,informativo,Manuales,https://es.scribd.com/document/590861578/BASCULA-BAME-420-Y-425#google_vignette,El mismo enlace se usa como manual de usuario y de servicio.
+Hoja2,12,EQ-000009,risk_total_hardcoded,informativo,Total,9,El total está guardado como valor; la base lo recalculará.
+Hoja1,10,EQ-000009,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,11,EQ-000010,same_manual_url,informativo,Manuales,https://es.scribd.com/document/590861578/BASCULA-BAME-420-Y-425#google_vignette,El mismo enlace se usa como manual de usuario y de servicio.
+Hoja2,13,EQ-000010,risk_total_hardcoded,informativo,Total,9,El total está guardado como valor; la base lo recalculará.
+Hoja1,11,EQ-000010,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja2,14,EQ-000011,risk_total_hardcoded,informativo,Total,9,El total está guardado como valor; la base lo recalculará.
+Hoja1,12,EQ-000011,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,13,EQ-000012,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,14,EQ-000013,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,15,EQ-000014,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,16,EQ-000015,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,17,EQ-000016,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,18,EQ-000017,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,19,EQ-000018,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,20,EQ-000019,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,21,EQ-000020,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,22,EQ-000021,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,23,EQ-000022,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,24,EQ-000023,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,25,EQ-000024,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,26,EQ-000025,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,27,EQ-000026,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,28,EQ-000027,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,29,EQ-000028,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,30,EQ-000029,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,31,EQ-000030,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,32,EQ-000031,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,33,EQ-000032,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,34,EQ-000033,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,35,EQ-000034,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,36,EQ-000035,invalid_document_url,advertencia,Manual mantenimiento,www.frankshospitalworkshop.com/equipment/documents/defibrillators/service_manuals/Medtronic_Lifepak_20_-_Service_manual.pdf,El enlace no incluye un esquema HTTP/HTTPS válido.
+Hoja1,36,EQ-000035,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,37,EQ-000036,location_case_variant,advertencia,Guarda de equipo,Sala de hemodinamia,Existen variantes que solo difieren en mayúsculas/minúsculas.
+Hoja1,37,EQ-000036,invalid_document_url,advertencia,Manual mantenimiento,www.frankshospitalworkshop.com/equipment/documents/defibrillators/service_manuals/Medtronic_Lifepak_20_-_Service_manual.pdf,El enlace no incluye un esquema HTTP/HTTPS válido.
+Hoja1,37,EQ-000036,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,38,EQ-000037,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,39,EQ-000038,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,40,EQ-000039,invalid_document_url,advertencia,Manual mantenimiento,www.frankshospitalworkshop.com/equipment/documents/electrosurgery/service_manuals/Valleylab_Force_FX-8c_Electrosurgical_Generator_-_Service_manual.pdf,El enlace no incluye un esquema HTTP/HTTPS válido.
+Hoja1,40,EQ-000039,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,41,EQ-000040,invalid_document_url,advertencia,Manual mantenimiento,www.frankshospitalworkshop.com/equipment/documents/electrosurgery/service_manuals/Valleylab_ForceTriad_Energy_Platform_-_Service_manual.pdf,El enlace no incluye un esquema HTTP/HTTPS válido.
+Hoja1,41,EQ-000040,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,42,EQ-000041,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,43,EQ-000042,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,44,EQ-000043,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,45,EQ-000044,missing_specific_location,advertencia,Guarda de equipo,,Falta ubicación específica; se conserva el área hospitalaria.
+Hoja1,45,EQ-000044,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,46,EQ-000045,missing_specific_location,advertencia,Guarda de equipo,,Falta ubicación específica; se conserva el área hospitalaria.
+Hoja1,46,EQ-000045,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,47,EQ-000046,missing_specific_location,advertencia,Guarda de equipo,,Falta ubicación específica; se conserva el área hospitalaria.
+Hoja1,47,EQ-000046,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,48,EQ-000047,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,49,EQ-000048,same_manual_url,informativo,Manuales,https://prd-oregon-s3-mdr-media.s3-us-west-2.amazonaws.com/files/DRYPIX_Lite_OM_897N208066C_17_es.pdf,El mismo enlace se usa como manual de usuario y de servicio.
+Hoja1,49,EQ-000048,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,50,EQ-000049,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,51,EQ-000050,same_manual_url,informativo,Manuales,http://www.frankshospitalworkshop.com/equipment/documents/infant_incubators/service_manuals/Datex%20Ohmeda%20Care%20Plus%20Incubator%20-%20Service%20manual.pdf,El mismo enlace se usa como manual de usuario y de servicio.
+Hoja1,51,EQ-000050,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,52,EQ-000051,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,53,EQ-000052,duplicate_serial,error,SN,3979000122,El mismo número de serie aparece en más de un activo.
+Hoja1,53,EQ-000052,duplicate_asset_signature,advertencia,Equipo/Marca/Modelo/SN,3979000122,La firma completa del activo se repite; no se eliminó ningún registro.
+Hoja1,53,EQ-000052,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,54,EQ-000053,duplicate_serial,error,SN,3979000122,El mismo número de serie aparece en más de un activo.
+Hoja1,54,EQ-000053,duplicate_asset_signature,advertencia,Equipo/Marca/Modelo/SN,3979000122,La firma completa del activo se repite; no se eliminó ningún registro.
+Hoja1,54,EQ-000053,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,55,EQ-000054,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,56,EQ-000055,missing_user_manual,advertencia,Manual usuario,,No se proporcionó manual de usuario.
+Hoja1,56,EQ-000055,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,57,EQ-000056,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,58,EQ-000057,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,59,EQ-000058,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,60,EQ-000059,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,61,EQ-000060,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,62,EQ-000061,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,63,EQ-000062,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,64,EQ-000063,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,65,EQ-000064,missing_specific_location,advertencia,Guarda de equipo,,Falta ubicación específica; se conserva el área hospitalaria.
+Hoja1,65,EQ-000064,same_manual_url,informativo,Manuales,https://www.richmondscientific.com/wp-content/uploads/2022/07/cm_e-1.pdf?srsltid=AfmBOoqA_rhZo4t_qXtvqjY2NS-DhWBRch2QdEYZTdsInlYPAzODQEBF,El mismo enlace se usa como manual de usuario y de servicio.
+Hoja1,65,EQ-000064,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,66,EQ-000065,same_manual_url,informativo,Manuales,https://blogs.hsjda.es/electromedicina/wp-content/uploads/sites/10/2019/04/03-01-179-497-05-C00001-USO-MICR-Microscopio-Leica-F19_M844_M820_es.pdf,El mismo enlace se usa como manual de usuario y de servicio.
+Hoja1,66,EQ-000065,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,67,EQ-000066,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,68,EQ-000067,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,69,EQ-000068,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,70,EQ-000069,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,71,EQ-000070,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,72,EQ-000071,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,73,EQ-000072,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,74,EQ-000073,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,75,EQ-000074,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,76,EQ-000075,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,77,EQ-000076,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,78,EQ-000077,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,79,EQ-000078,serial_placeholder,advertencia,SN,S/N,El número de serie es un marcador y requiere verificación física.
+Hoja1,79,EQ-000078,duplicate_asset_signature,advertencia,Equipo/Marca/Modelo/SN,S/N,La firma completa del activo se repite; no se eliminó ningún registro.
+Hoja1,79,EQ-000078,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,80,EQ-000079,serial_placeholder,advertencia,SN,S/N,El número de serie es un marcador y requiere verificación física.
+Hoja1,80,EQ-000079,duplicate_asset_signature,advertencia,Equipo/Marca/Modelo/SN,S/N,La firma completa del activo se repite; no se eliminó ningún registro.
+Hoja1,80,EQ-000079,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,81,EQ-000080,serial_placeholder,advertencia,SN,S/N,El número de serie es un marcador y requiere verificación física.
+Hoja1,81,EQ-000080,duplicate_asset_signature,advertencia,Equipo/Marca/Modelo/SN,S/N,La firma completa del activo se repite; no se eliminó ningún registro.
+Hoja1,81,EQ-000080,location_case_variant,advertencia,Guarda de equipo,Sala de Hemodinamia,Existen variantes que solo difieren en mayúsculas/minúsculas.
+Hoja1,81,EQ-000080,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,82,EQ-000081,serial_placeholder,advertencia,SN,S/N,El número de serie es un marcador y requiere verificación física.
+Hoja1,82,EQ-000081,duplicate_asset_signature,advertencia,Equipo/Marca/Modelo/SN,S/N,La firma completa del activo se repite; no se eliminó ningún registro.
+Hoja1,82,EQ-000081,location_case_variant,advertencia,Guarda de equipo,Sala de Hemodinamia,Existen variantes que solo difieren en mayúsculas/minúsculas.
+Hoja1,82,EQ-000081,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,83,EQ-000082,serial_placeholder,advertencia,SN,S/N,El número de serie es un marcador y requiere verificación física.
+Hoja1,83,EQ-000082,duplicate_asset_signature,advertencia,Equipo/Marca/Modelo/SN,S/N,La firma completa del activo se repite; no se eliminó ningún registro.
+Hoja1,83,EQ-000082,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,84,EQ-000083,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,85,EQ-000084,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,86,EQ-000085,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,87,EQ-000086,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,88,EQ-000087,location_case_variant,advertencia,Guarda de equipo,Sala de hemodinamia,Existen variantes que solo difieren en mayúsculas/minúsculas.
+Hoja1,88,EQ-000087,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,89,EQ-000088,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,90,EQ-000089,missing_specific_location,advertencia,Guarda de equipo,,Falta ubicación específica; se conserva el área hospitalaria.
+Hoja1,90,EQ-000089,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,91,EQ-000090,spelling_candidate,advertencia,Equipo,Tomograffo,Posible error ortográfico; confirmar antes de cambiar el catálogo.
+Hoja1,91,EQ-000090,same_manual_url,informativo,Manuales,https://www.gehealthcare.com/en-us/support/manuals,El mismo enlace se usa como manual de usuario y de servicio.
+Hoja1,91,EQ-000090,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,92,EQ-000091,same_manual_url,informativo,Manuales,https://www.siemens-healthineers.com/en-us/services/imaging-therapy/document-library,El mismo enlace se usa como manual de usuario y de servicio.
+Hoja1,92,EQ-000091,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,93,EQ-000092,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,94,EQ-000093,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,95,EQ-000094,same_manual_url,informativo,Manuales,https://www.bioclinicalservices.com.au/mindray/clinical/v60-anesthetic-vaporizer-operators-manual-rev-3-0-nov-2015,El mismo enlace se usa como manual de usuario y de servicio.
+Hoja1,95,EQ-000094,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,96,EQ-000095,same_manual_url,informativo,Manuales,https://www.bioclinicalservices.com.au/mindray/clinical/v60-anesthetic-vaporizer-operators-manual-rev-3-0-nov-2015,El mismo enlace se usa como manual de usuario y de servicio.
+Hoja1,96,EQ-000095,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,97,EQ-000096,same_manual_url,informativo,Manuales,https://www.bioclinicalservices.com.au/mindray/clinical/v60-anesthetic-vaporizer-operators-manual-rev-3-0-nov-2015,El mismo enlace se usa como manual de usuario y de servicio.
+Hoja1,97,EQ-000096,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,98,EQ-000097,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,99,EQ-000098,missing_specific_location,advertencia,Guarda de equipo,,Falta ubicación específica; se conserva el área hospitalaria.
+Hoja1,99,EQ-000098,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,100,EQ-000099,missing_specific_location,advertencia,Guarda de equipo,,Falta ubicación específica; se conserva el área hospitalaria.
+Hoja1,100,EQ-000099,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."
+Hoja1,101,EQ-000100,missing_specific_location,advertencia,Guarda de equipo,,Falta ubicación específica; se conserva el área hospitalaria.
+Hoja1,101,EQ-000100,maintenance_periodicity_missing,advertencia,Periodicidad,,"El Excel contiene la rutina, pero no la frecuencia preventiva."

@@ -9,4 +9,7 @@ vite.config.*.timestamp-*
 *-debug.log*
 logs/
 *.log
+__pycache__/
+.venv-inventory/
+supabase/.temp/
 .DS_Store

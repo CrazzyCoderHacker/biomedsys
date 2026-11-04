@@ -1,0 +1,101 @@
+﻿id,legacy_id,inventory_code,equipment_type,manufacturer,model,serial_number,serial_is_placeholder,manufacture_year,acquisition_year,hospital_area,specific_location,status,source_row,requires_review
+7cbd4d59-5efa-580b-9827-4598bedc5a6c,1,EQ-000001,Arco en c,General electric,OEC 9900 elite,E9-2023,False,2012,2018,Quirofano,,desconocido,2,True
+f8d39fa8-72c4-5335-adf7-403ee49faddb,2,EQ-000002,Arco en c,Philips,.BV Endura,5888,False,2020,2021,Imagenologia,Quirofano recu,desconocido,3,True
+dbedd424-9494-5b0d-b320-88aa825d900f,3,EQ-000003,Autoclave,3M,487AGP,701586,False,2002,2018,CEYE,,desconocido,4,True
+fac48597-be5b-59b6-b6c5-ae87fe665514,4,EQ-000004,Autoclave,Hopham,Vapor,S/N,True,2017,2018,CEYE,,desconocido,5,True
+3ef6e41d-a4d5-5ba1-acc9-4f6eb10da3e5,5,EQ-000005,Bascula,Beurer,Baby care,A23/201869,False,2018,2019,Quirofano,Central de enfermeria,desconocido,6,True
+7feb0283-d3ac-578f-9659-f8a68c1b184d,6,EQ-000006,Bascula,Bame,420,2838-17,False,2017,2018,Hospitalizacion,Central de enfermeria C,desconocido,7,True
+6d619331-7cb2-5bbc-9804-7913fa5316b3,7,EQ-000007,Bascula,Bame,420,2804-17,False,2017,2018,Hospitalizacion,Central de enfermeria A,desconocido,8,True
+b561d0e8-f980-5cd1-bed7-ec0d95bfe591,8,EQ-000008,Bascula,Bame,420,2827-17,False,2017,2018,Hospitalizacion,Central de enfermeria B,desconocido,9,True
+89c64a05-c390-5775-a9b5-ac9f96c97b83,9,EQ-000009,Bascula,Bame,420,2781-17,False,2017,2018,Urgencias,Consultorio URG 1,desconocido,10,True
+9a072ca3-3ada-53c1-98b1-3733d0544a44,10,EQ-000010,Bascula,Bame,420,2796-17,False,2017,2018,Terapia intensiva,Central de enfermeria,desconocido,11,True
+573f4fe1-f439-5734-8f9b-852a1d3a35e5,11,EQ-000011,Bascula electronica,Seca,Pedestal,5703295083546,False,2007,2019,Almacen de equipo medico,Reparacion,desconocido,12,True
+524b0454-ebca-5df1-9715-8a2050d23521,12,EQ-000012,Cama hospitalaria,Hill room,Versa care,F174AD4730,False,1994,2018,Terapia intensiva,Cubiculo 3,desconocido,13,True
+3f5e2376-157a-55e2-a3fa-89a2d22b02f5,13,EQ-000013,Cama hospitalaria,Hill room,Versa care,G006AD5490,False,1995,2018,Terapia intensiva,Cubiculo 4,desconocido,14,True
+15f2d484-11d8-5f73-a68a-efe2946fa4fd,14,EQ-000014,Cama hospitalaria,Hill room,Versa care,I333AD4718,False,2000,2018,Terapia intensiva,Cubiculo 5,desconocido,15,True
+1fe11c6e-f9f9-59cd-94c9-369ec46d8273,15,EQ-000015,Cama hospitalaria,Hill room,Versa care,F349AD4402,False,1995,2018,Terapia intensiva,Cubiculo 6,desconocido,16,True
+cc2771fd-2afa-5ac9-81fe-af03989092e1,16,EQ-000016,Cama hospitalaria,Hill room,Versa care,F113AD1439,False,1996,2018,Terapia intensiva,Cubiculo 7,desconocido,17,True
+fee88ad5-c365-5232-957d-0e8a808f9683,17,EQ-000017,Cama hospitalaria,Hill room,Versa Care,I172AD2436,False,1997,2018,Hospitalizacion,Habitacion 206,desconocido,18,True
+49fd2cf4-f800-5992-a2de-d44a13394b4b,18,EQ-000018,Cama hospitalaria,Hill room,Care assist,J163AP1274,False,2015,2018,Hospitalizacion,Habitacion 201,desconocido,19,True
+56565a48-5bd7-5e3d-a835-4a79734fd1df,19,EQ-000019,Cama hospitalaria,Hill room,Versa Care,F349AD4417,False,1999,2018,Hospitalizacion,Habitacion 209,desconocido,20,True
+9d309edd-9186-5f20-b5ca-2b02f374a015,20,EQ-000020,Cama hospitalaria,Hill room,Versa Care,F174AD4711,False,2000,2018,Hospitalizacion,Habitacion 207,desconocido,21,True
+e24a29a5-23e4-59c2-8077-27f1cbb37f31,21,EQ-000021,Cama hospitalaria,Hill room,Versa Care,F349AD4423,False,2001,2018,Hospitalizacion,Habitacion 202,desconocido,22,True
+4efeb01b-83db-5d25-ab96-b679b85eb197,22,EQ-000022,Cama hospitalaria,Hill room,Care assist,133009,False,2008,2018,Hospitalizacion,Habitacion 203,desconocido,23,True
+6fd951fc-998f-57c1-8178-e4a3eb3807b8,23,EQ-000023,Cama hospitalaria,Hill room,Care assist,J163AP0006,False,2015,2018,Hospitalizacion,Habitacion 213,desconocido,24,True
+71d38ac1-2f00-58de-975c-e7bc3c19c20c,24,EQ-000024,Camilla,S/M,3 tesla,STR918071,False,2018,2019,Imagenologia,Resonancia magnetica,desconocido,25,True
+d2283c3b-1cff-5aac-a8b1-f2b2e65321aa,25,EQ-000025,Camilla,Hill room,Transtar,H240AN9684,False,1998,2018,Endoscopia,Recuperacion 2,desconocido,26,True
+5491e53b-152f-5ee6-9d3c-869467c31076,26,EQ-000026,Camilla,Hill room,Stretcher,R208AQ4945,False,2017,2018,Quirofano,Recuperacion 6,desconocido,27,True
+bfe00e9f-fbc0-53df-bb1e-cb81f42c9dfc,27,EQ-000027,Camilla,Hill room,Stretcher,Q100AQ1186,False,2011,2018,Urgencias,Cubiculo de observacion 2,desconocido,28,True
+d485bfeb-4df6-56d8-8e12-51320a4966ec,28,EQ-000028,Camilla,Hill room,Stretcher,R207AQ4915,False,2017,2018,Quirofano,Recuperacion 3,desconocido,29,True
+eb20b9f7-7a33-55c9-99a3-728e3a81fdb7,29,EQ-000029,Camilla,Hill room,Stretcher,R207AQ4941,False,2017,2018,Urgencias,Cubiculo de observacion 3,desconocido,30,True
+ae51d68a-8b29-551d-9e82-4c85d46561ec,30,EQ-000030,Camilla,Hill room,Stretcher,R207AQ4943,False,1993,2018,Urgencias,Cubiculo de observacion 5,desconocido,31,True
+c331b95e-ff2a-50c1-93d8-72fa902dd49d,31,EQ-000031,Cuna de calor radiante,Drager,Babytherm,ASKB0072,False,2017,2018,Quirofano,Sala de cirugia 5,desconocido,32,True
+68e2c34d-c6b9-5a85-9117-c8cd0e061ae9,32,EQ-000032,Cuna de calor radiante,Drager,Babytherm,ASKB0065,False,2017,2018,UCIN,Cubiculo UCIN 2,desconocido,33,True
+a5fe023d-63ef-5837-9366-5396ccf5434f,33,EQ-000033,Cuna de calor radiante,Drager,Babytherm,ASKC0028,False,2017,2018,Tococirugia,Sala de cirugia TOCO 2,desconocido,34,True
+0b74b645-5afc-5b59-ac39-1e2b579fe1d3,34,EQ-000034,Densitometro,General electric,Lunar,80910GA,False,2014,2018,Imagenologia,Densitometria,desconocido,35,True
+aab5e3d4-d611-5ab1-aca1-cba81af5b061,35,EQ-000035,Desfibrilador,Medtronic,Lifepack 20,32596330,False,2004,2019,Urgencias,Central de enfermeria,desconocido,36,True
+34cc5f42-e332-5514-b7aa-947e53335c98,36,EQ-000036,Desfibrilador,Medtronic,Lifepack 20,34785258,False,2007,2018,Quirofano,Sala de hemodinamia,desconocido,37,True
+1152806c-0d54-5e1a-aa40-a4b560f41a9f,37,EQ-000037,Electrocardiografo,Mindray,Beneheart R3,FK55005933,False,2015,2018,Urgencias,Central de enfermeria,desconocido,38,True
+347dc13c-89cc-5067-ad78-7baee4169dc4,38,EQ-000038,Electrocardiografo,Mindray,Beneheart R3,55004941,False,2015,2018,Terapia intensiva,Central de enfermeria,desconocido,39,True
+f0c9b6b7-7ed9-511e-b1a5-4b6a0eaa2e7a,39,EQ-000039,Electrocauterio,Valley lab,Force FX,CF0I14665A,False,2002,2018,Quirofano,Sala de cirugia 3,desconocido,40,True
+fcbc8f29-da65-59e8-8027-e605e5c31ab3,40,EQ-000040,Electrocauterio,Valley lab,Force triad,T8B5431E,False,2008,2018,Quirofano,Sala de cirugia 1,desconocido,41,True
+520aaddf-dd65-56d8-9d13-abbf0f2e3306,41,EQ-000041,Electrocauterio,Valley lab,FT10,T7G17120DX,False,2017,2018,Quirofano,Sala de cirugia 4,desconocido,42,True
+1f70decc-2b89-5fc2-9137-cafbbf904ef4,42,EQ-000042,Fototerapia,Ohmeda,Bili blanket,HDKJ50346,False,2008,2019,UCIN,Guarda de equipo,desconocido,43,True
+46cbc5ad-c9bb-5117-8993-a03daf1ad800,43,EQ-000043,Gamma Camara,Siemens,Symbia E Dual Head System,80042,False,2018,2018,Medicina Nuclear,Gamma Camara,desconocido,44,True
+2a794de8-62ce-5d16-ab31-48df0efc916d,44,EQ-000044,Humidificador,Fisher & paykel,850,151217279014,False,2010,2021,Inhaloterapia,,desconocido,45,True
+6b7ae0a3-f60a-5d68-99c0-57f182c1639d,45,EQ-000045,Humidificador,Fisher & paykel,Airvo 2,170927058232,False,2017,2018,Inhaloterapia,,desconocido,46,True
+edd60779-db51-561a-9096-966b525fb550,46,EQ-000046,Humidificador,Fisher & paykel,Airvo 2,171121062161,False,2017,2020,Inhaloterapia,,desconocido,47,True
+3b94cddc-3f1f-59cf-a63b-af15ddaa5672,47,EQ-000047,Impresora de placas radiograficas,Fujifilm,DRY PIX smart,76334965,False,2017,2018,Imagenologia,Central de visualizacion,desconocido,48,True
+be396664-1ace-54d5-b6df-96512ce876d7,48,EQ-000048,Impresora de placas radiograficas,Fujifilm,DRY PIX lite,76619052,False,2017,2018,Imagenologia,Central de visualizacion,desconocido,49,True
+7a9c65bb-fcf0-52e1-8295-66db7f81d892,49,EQ-000049,Incubadora,Drager,Caleo,ARZD0126,False,2008,2018,Hospitalizacion,Cunero,desconocido,50,True
+4387aeb7-7eec-5487-bd03-43b61e918247,50,EQ-000050,Incubadora,Ohmeda,Care plus,HCDQ00120,False,2011,2018,Quirofano,Sala de cirugia 5,desconocido,51,True
+c1efa43c-0b10-54c4-8d97-4f8220921758,51,EQ-000051,Lampara de cirugia,Mindray,HyLED 760,1579000406,False,2017,2018,Quirofano,Sala de cirugia ambulatoria,desconocido,52,True
+5d3e8178-5292-5361-bdf0-1c3207c7f82e,52,EQ-000052,Lampara de cirugia,Mindray,HyLED 600,3979000122,False,2017,2018,Tococirugia,Sala de cirugia TOCO 2,desconocido,53,True
+db1739df-eccb-5a44-92fe-33ef6c979cc7,53,EQ-000053,Lampara de cirugia,Mindray,HyLED 600,3979000122,False,2017,2018,Tococirugia,Sala de cirugia TOCO 2,desconocido,54,True
+1dfa680f-e879-5b9a-a4ee-5f5f9f609a68,54,EQ-000054,Lampara de cirugia,Mindray,HyLED 600,3979000126,False,2017,2018,Urgencias,Cuarto de shock,desconocido,55,True
+c36ddb9d-91ef-56ec-8004-69a112a29835,55,EQ-000055,Luminometro,3M,Clean trace ING3,NEJ062,False,2017,2018,Epidemiologia,Oficina,desconocido,56,True
+d874a1bb-ba15-54a6-98f9-342339190805,56,EQ-000056,Maquina de anestesia,Mindray,Wato EX-20,DW75005841,False,2017,2018,Tococirugia,Sala de cirugia TOCO 1,desconocido,57,True
+99bf1950-85de-5f6f-9c81-4748ad9178b1,57,EQ-000057,Maquina de anestesia,Mindray,Wato EX-20,DW75005808,False,2017,2018,Quirofano,Sala de cirugia ambulatoria,desconocido,58,True
+782bfca4-5290-54b1-84a7-f385d87a8167,58,EQ-000058,Maquina de anestesia,Mindray,Wato EX-65,KT79000962,False,2017,2018,Quirofano,Sala de cirugia 3,desconocido,59,True
+90736e74-f760-5957-b0ec-3393ba2087f0,59,EQ-000059,Maquina de anestesia,Mindray,Wato EX-65,KT79000965,False,2017,2018,Quirofano,Sala de cirugia 1,desconocido,60,True
+4e0e3ef7-d6e6-56c5-9c5a-4893b6411bde,60,EQ-000060,Mastografo,Lorad hologic,ASY-00555,18008055028P,False,2005,2018,Imagenologia,Mastografo,desconocido,61,True
+32617426-a3fc-52f2-8ddb-b1f622ac0768,61,EQ-000061,Mesa de cirugia,Mindray,Hybase 3000,M175003234,False,2017,2018,Tococirugia,Sala de cirugia TOCO 2,desconocido,62,True
+35d42905-cdb5-59ab-85b5-d256cc0cd2ee,62,EQ-000062,Mesa de cirugia,Mindray,Hybase 3000,M175003235,False,2017,2018,Tococirugia,Sala de cirugia TOCO 1,desconocido,63,True
+4810927f-7b9c-5076-8661-0fe4582a75aa,63,EQ-000063,Mesa de cirugia,Mindray,HyBase 6100,G979006014,False,2017,2018,Quirofano,Sala de cirugia 2,desconocido,64,True
+c0fe2aa6-3e73-5dc7-9a98-5aa0693b58f2,64,EQ-000064,Microscopio,Leica,CME,3038,False,2017,2018,Patologia,,desconocido,65,True
+5912246f-fa17-5728-972c-c96340449c32,65,EQ-000065,Microscopio quirurgico,Leica,F40,300506003,False,2003,2018,Quirofano,Sala de cirugia ambulatoria,desconocido,66,True
+91174712-3165-5b32-b561-ca618c43329e,66,EQ-000066,Monitor de signos vitales,Mindray,V12,EGK13003820,False,1999,2018,UCIN,Cubiculo UCIN 3,desconocido,67,True
+d2d23d3a-8b4e-50a0-aacb-60de1b6c5840,67,EQ-000067,Monitor de signos vitales,Mindray,V12,EGK12002980,False,1999,2018,UCIN,Cubiculo UCIN 2,desconocido,68,True
+2f264295-de4b-5f7b-b61e-4f1df8c41947,68,EQ-000068,Monitor de signos vitales,Mindray,V12,EG08000796,False,1999,2018,Hospitalizacion,Cunero,desconocido,69,True
+9a7b2d05-791f-5eae-b283-5d42fe58c6ee,69,EQ-000069,Monitor de signos vitales,Mindray,V12,EGK22011292,False,1999,2018,Tococirugia,Recuperacion 1,desconocido,70,True
+76cc660e-1464-5a4d-b681-041a377cd85c,70,EQ-000070,Monitor de signos vitales,Mindray,V12,EGK22011337,False,1999,2018,Tococirugia,Recuperacion 2,desconocido,71,True
+bb0eaf80-28ea-5d28-aa93-4a9e85d10cd0,71,EQ-000071,Monitor de signos vitales,Mindray,uMec10,KN7A015356,False,2017,2018,Quirofano,Recuperacion 1,desconocido,72,True
+4a8951fd-1c9c-50dd-ae4e-992e976fae66,72,EQ-000072,Monitor de signos vitales,Mindray,uMec10,KN7A015361,False,2017,2018,Quirofano,Recuperacion 2,desconocido,73,True
+7e926119-e5c9-5446-97fd-2ab7904b3dd0,73,EQ-000073,Monitor de signos vitales,Mindray,uMec10,KN7A015353,False,2017,2018,Urgencias,Cubiculo de observacion 1,desconocido,74,True
+a3159641-edd9-5579-ab67-945ab986aea2,74,EQ-000074,Monitor de signos vitales,Mindray,uMec10,KN7A015354,False,2017,2018,Hospitalizacion,Central de enfermeria A,desconocido,75,True
+c9ccfb7e-566a-5a44-bf48-324dd9edc092,75,EQ-000075,Monitor de signos vitales,Mindray,uMec10,KN7A015351,False,2017,2018,Quirofano,Recuperacion 3,desconocido,76,True
+b346c3f3-c0ec-5375-a0f9-5a3448057b70,76,EQ-000076,Monitor de signos vitales,Mindray,uMec10,KN7A015358,False,2017,2018,Quirofano,Recuperacion 4,desconocido,77,True
+7b7090df-3675-5b74-8f8f-36132e1f77e5,77,EQ-000077,Monitor de signos vitales,Mindray,uMec10,KN7A015357,False,2017,2018,Urgencias,Cubiculo de observacion 1,desconocido,78,True
+6f3e9dea-f513-55af-b681-7359c252b479,78,EQ-000078,Negatoscopio,Med hame,S/M,S/N,True,2017,2018,Quirofano,Sala de cirugia 5,desconocido,79,True
+8b81270e-b9c3-586e-9eea-8af3eb8a4d0f,79,EQ-000079,Negatoscopio,Med hame,S/M,S/N,True,2017,2018,Imagenologia,Jefatura de imagenologia,desconocido,80,True
+d774f4cb-8de2-5e20-982d-2fcdafa4d74f,80,EQ-000080,Negatoscopio,Med hame,S/M,S/N,True,2017,2018,Quirofano,Sala de Hemodinamia,desconocido,81,True
+158d8f0d-d1c2-5ff7-a265-5c2e9003f957,81,EQ-000081,Negatoscopio,Med hame,S/M,S/N,True,2017,2018,Quirofano,Sala de Hemodinamia,desconocido,82,True
+5045004b-17f5-56b7-80d0-f25356f4e74b,82,EQ-000082,Negatoscopio,Med hame,S/M,S/N,True,2018,2018,Mantenimiento,Ilich lo tiene en almacen,desconocido,83,True
+f7f39ca3-31cf-53f9-8ef5-713fcc7aebf8,83,EQ-000083,Rayos x,Toshiba,DST-3000A1,W3B1092093,False,2004,2018,Imagenologia,Sala de rayos X 1,desconocido,84,True
+0c606063-74cf-5ec3-b760-2dc204a564bc,84,EQ-000084,Rayos x,Toshiba,DST-3000A1,W3B10X2094,False,2004,2018,Imagenologia,Sala de rayos X 2,desconocido,85,True
+dd65133a-e951-570d-b0b1-246a2b7d9a02,85,EQ-000085,Rayos x movil,General electric,Optima XR 200amx,1032351MX4,False,2008,2018,Imagenologia,Central de visualizacion,desconocido,86,True
+e66ba4d1-75ec-5fe9-ad18-2d7a8870ff7d,86,EQ-000086,Resonancia magnetica,Siemens,Magnetom essenza,150134,False,2017,2018,Imagenologia,Resonancia magnetica,desconocido,87,True
+2d0dde6a-cfe9-562d-a154-d25751f43b3b,87,EQ-000087,Sala de hemodinamia,Siemens,Artis zee,2894,False,2010,2018,Quirofano,Sala de hemodinamia,desconocido,88,True
+b301432f-3670-59d5-9f6d-82e3f26dbace,88,EQ-000088,Sierra para yeso,Souter medical,CC4,1465,False,2015,2018,Urgencias,Sala de procedimientos multiples,desconocido,89,True
+547a2347-1538-5267-b5a9-133841643344,89,EQ-000089,Tococardiografo,Sonicaid,Team duo,738XB024031612,False,2015,2018,Hospitalizacion,,desconocido,90,True
+ea6bd689-ad0f-5c59-8645-fded2d5ebcf3,90,EQ-000090,Tomograffo,General electric,6670000-2,CBDMG2000080HM,False,2020,2021,Imagenologia,Tomografia,desconocido,91,True
+bd87166b-1408-53c0-ab94-c933dde953a7,91,EQ-000091,Tomografia por Emision de Positrones/Tomografia Computarizada,Siemens,Biograph Orizon,94580,False,2018,2018,Medicina Nuclear,PET/CT,desconocido,92,True
+12553f82-d579-5972-a784-c36c276883e3,92,EQ-000092,Ultrasonido,Siemens,Acuson NX3 elite,501484,False,2017,2018,Imagenologia,Ultrasonido,desconocido,93,True
+ef865a6f-e03d-5a31-9b31-214193dafc34,93,EQ-000093,Ultrasonido portatil,General electric,Logiq e,6077280WX0,False,2020,2020,Imagenologia,Ultrasonido,desconocido,94,True
+a0029ad2-98c7-5688-b469-d8e40441286d,94,EQ-000094,Vaporizador,Mindray,V60,DKJ78106900,False,2017,2018,Quirofano,Sala de cirugia 1,desconocido,95,True
+f5b3b4c7-c976-5cb6-a638-62446bb446e6,95,EQ-000095,Vaporizador,Mindray,V60,DKJ781D6933,False,2017,2018,Quirofano,Sala de cirugia 2,desconocido,96,True
+a9f124b7-199d-5d1c-ac4a-58a7e900d24a,96,EQ-000096,Vaporizador,Mindray,V60,DKJ78106937,False,2017,2018,Quirofano,Sala de cirugia 3,desconocido,97,True
+4b91eea8-c0dd-54d4-afc4-824508fa0148,97,EQ-000097,Ventilador invasivo,Viasys,Avea,AGV01998,False,1998,2018,UCIN,Cubiculo UCIN 1,desconocido,98,True
+ab35899e-f76a-50a4-b004-47dcf7c494d0,98,EQ-000098,Ventilador invasivo,Nellcor puritan bennett,840 Ventilator system,3510064542,False,2018,2018,Inhaloterapia,,desconocido,99,True
+aec4dab8-9e92-5f2f-adf0-ed6abf1d5cfc,99,EQ-000099,Ventilador invasivo,Nellcor puritan bennett,840 Ventilator system,3510022812,False,2006,2018,Inhaloterapia,,desconocido,100,True
+db7da8db-7074-5f10-93f6-9331112c2e61,100,EQ-000100,Ventilador invasivo,Nellcor puritan bennett,840 Ventilator System,3510012851,False,2006,2018,Inhaloterapia,,desconocido,101,True
