@@ -18,7 +18,38 @@ Resultado aprobado:
 - tipos críticos, llaves primarias, llaves foráneas y enums base compatibles con los SQL locales;
 - `is_manager()` existe con firma sin argumentos y retorno booleano.
 
-La Fase 2 permanece pendiente de autorización final y acuerdo del propietario. El preflight debe repetirse inmediatamente antes del primer DDL; cualquier cambio en su resultado cancela el despliegue.
+El preflight fue la puerta de entrada aprobada para la Fase 2 y se repitió inmediatamente antes del primer DDL.
+
+## Fase 2 aplicada en el proyecto oficial
+
+El 2026-11-04 el usuario autorizó la Fase 2 y confirmó el acuerdo del propietario. El preflight se repitió inmediatamente antes del primer DDL. Se ejecutaron, en transacciones independientes y en este orden:
+
+1. `02_inventory.sql`
+2. `11_inventory_relations.sql`
+3. `12_inventory_security.sql`
+
+Cada transacción incluyó precondiciones y aserciones posteriores; no se produjo ningún error.
+
+Resultado remoto después de las migraciones:
+
+- 25 tablas públicas: las 10 originales y 15 nuevas;
+- 51 políticas públicas y RLS habilitado en las 25 tablas;
+- 13 tablas del dominio de inventario creadas por `02`;
+- `maintenance_records` y `maintenance_evidence` creadas por `11`;
+- cinco columnas puente creadas en `reports` y `maintenances`;
+- vistas `equipment_inventory_detail` y `service_orders` disponibles;
+- funciones de inventario y RPC de seguridad disponibles;
+- 3 perfiles y 3 usuarios Auth conservados;
+- `rls_auto_enable`, `is_manager`, `set_maintenance_number` y `write_audit_log` conservadas.
+
+Conteos originales verificados después del despliegue:
+
+- `maintenance_catalog`: 3;
+- `profiles`: 3;
+- `audit_log`, `maintenance_activities`, `maintenances`, `quotes`, `reports`, `training_participants`, `trainings` y `user_access_requests`: 0;
+- `auth.users`: 3.
+
+No se ejecutaron los scripts base `00`–`10`, no se importó `Final.xlsx` y todas las tablas nuevas permanecen sin los 100 equipos. La Fase 3 requiere una autorización separada.
 
 ## Estado remoto y comparación
 
