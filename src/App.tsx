@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import { MaintenanceCalendar, NoticesView } from "./components/TrainingViews";
 import { AuditView, QuotationsView, UserPermissionsView } from "./components/AdminViews";
+import { EquipmentDetail, Inventory } from "./components/InventoryViews";
 
 type View =
   | "dashboard"
@@ -458,46 +459,6 @@ function UserDashboard({ setView, openReport }: { setView: (view: View) => void;
   );
 }
 
-function Inventory({ role, setView }: { role: Role; setView: (view: View) => void }) {
-  return (
-    <>
-      <PageIntro title={role === "usuario" ? "Consultar equipo" : "Inventario de activos"} description="El inventario se habilitará cuando se reciba y valide el documento fuente." />
-      <section className="panel empty-state">
-        <PackageOpen size={38} />
-        <h3>Inventario pendiente de integración</h3>
-        <p>No se muestran equipos ni identificadores para evitar registrar información que todavía no ha sido validada.</p>
-      </section>
-    </>
-  );
-}
-
-function EquipmentDetail({ role, setView }: { role: Role; setView: (view: View) => void }) {
-  return (
-    <>
-      <button className="back-link" onClick={() => setView("inventario")}><ArrowLeft size={17} /> Volver al inventario</button>
-      <section className="equipment-head">
-        <div className="equipment-icon"><MonitorCog size={28} /></div>
-        <div className="equipment-title"><div><Badge>En reparación</Badge><span>EQ-000184</span></div><h2>Ventilador Servo-i</h2><p>Maquet · Serie 28471039 · UCI Adultos, cubículo 4</p></div>
-        <div className="equipment-actions">{role !== "usuario" && <Button variant="secondary" icon={Wrench} onClick={() => setView("orden")}>Abrir orden</Button>}<Button icon={History}>Ver bitácora</Button></div>
-      </section>
-      <div className="equipment-layout">
-        <section className="panel detail-main">
-          <div className="tabs"><button className="active">Datos</button><button>Historial de mantenimiento</button><button>Fallas</button><button>Documentos</button><button>Garantía y vida útil</button></div>
-          <div className="detail-section"><h3>Identificación del equipo</h3><div className="data-grid">
-            {[["Marca", "Maquet"], ["Modelo", "Servo-i"], ["Número de serie", "28471039"], ["No. de inventario", "EQ-000184"], ["Tipo de equipo", "Soporte de vida"], ["Riesgo", "Alto"]].map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}
-          </div></div>
-          <div className="detail-section"><h3>Ubicación y responsable</h3><div className="data-grid"><div><span>Servicio</span><strong>UCI Adultos</strong></div><div><span>Ubicación específica</span><strong>Cubículo 4</strong></div><div><span>Responsable</span><strong>Jefatura de UCI</strong></div></div></div>
-          <div className="maintenance-note"><CheckCircle2 size={20} /><div><strong>Último mantenimiento preventivo: 12 mayo 2024</strong><span>Próximo programado para el 12 noviembre 2024 · Periodicidad semestral</span></div></div>
-        </section>
-        <aside className="detail-aside">
-          <section className="panel qr-card"><div className="qr-visual"><QrCode size={104} strokeWidth={1.4} /></div><strong>EQ-000184</strong><span>Escanea para abrir esta ficha</span><Button variant="secondary">Descargar etiqueta</Button></section>
-          <section className="panel audit-card"><h3>Trazabilidad reciente</h3><div><i className="danger-dot" /><span><strong>Estado actualizado</strong><small>Por Jorge Ruiz · hace 18 min</small></span></div><div><i /><span><strong>Orden OS-2481 creada</strong><small>Por Ana Martínez · hace 32 min</small></span></div><button>Ver historial completo <ChevronRight size={15} /></button></section>
-        </aside>
-      </div>
-    </>
-  );
-}
-
 function ServiceOrder({ setView }: { setView: (view: View) => void }) {
   const [saved, setSaved] = useState(false);
   return (
@@ -688,6 +649,7 @@ function BottomNav({ role, view, setView }: { role: Role; view: View; setView: (
 export default function App() {
   const [role, setRole] = useState<Role | null>(null);
   const [view, setView] = useState<View>("dashboard");
+  const [selectedEquipmentId, setSelectedEquipmentId] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
   const [loadingSession, setLoadingSession] = useState(true);
   useEffect(() => {
@@ -722,8 +684,8 @@ export default function App() {
           {view === "dashboard" && role === "jefe" && <ManagerDashboard setView={setView} />}
           {view === "dashboard" && role === "tecnico" && <TechnicianDashboard setView={setView} />}
           {view === "dashboard" && role === "usuario" && <UserDashboard setView={setView} openReport={() => setReportOpen(true)} />}
-          {view === "inventario" && <Inventory role={role} setView={setView} />}
-          {view === "equipo" && <EquipmentDetail role={role} setView={setView} />}
+          {view === "inventario" && <Inventory role={role} onSelectEquipment={(equipmentId) => { setSelectedEquipmentId(equipmentId); setView("equipo"); }} />}
+          {view === "equipo" && <EquipmentDetail equipmentId={selectedEquipmentId} role={role} onBack={() => setView("inventario")} />}
           {view === "orden" && <ServiceOrder setView={setView} />}
           {view === "checklist" && <ElectricalChecklist setView={setView} />}
           {view === "calendario" && <MaintenanceCalendar role={role} />}

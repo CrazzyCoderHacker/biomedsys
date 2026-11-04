@@ -42,6 +42,8 @@ declare value_count integer; affected integer; blocked boolean := false;
 begin
   select count(*) into value_count from public.search_equipment_directory(null);
   if value_count <> 100 then raise exception 'Clinical directory expected 100, got %', value_count; end if;
+  select count(*) into value_count from public.search_equipment_inventory(null, null, null);
+  if value_count <> 0 then raise exception 'Clinical role exposed full inventory RPC: %', value_count; end if;
   select count(*) into value_count from public.equipment_assets;
   if value_count <> 0 then raise exception 'Clinical role exposed base assets: %', value_count; end if;
   select count(*) into value_count from public.equipment_inventory_detail;
@@ -87,6 +89,8 @@ begin
   if value_count <> 100 then raise exception 'Manager expected 100 assets, got %', value_count; end if;
   select count(*) into value_count from public.inventory_import_issues;
   if value_count <> 162 then raise exception 'Manager expected 162 issues, got %', value_count; end if;
+  select count(*) into value_count from public.search_equipment_inventory('mindray', null, 'alto');
+  if value_count < 1 then raise exception 'Manager inventory search/filter returned no results'; end if;
   update public.equipment_assets set status = 'operativo' where inventory_code = 'EQ-000100';
   get diagnostics affected = row_count;
   if affected <> 1 then raise exception 'Manager could not update asset'; end if;
@@ -125,6 +129,8 @@ declare value_count integer; affected integer;
 begin
   select count(*) into value_count from public.equipment_assets;
   if value_count <> 100 then raise exception 'Technician expected 100 assets, got %', value_count; end if;
+  select count(*) into value_count from public.search_equipment_inventory(null, null, null);
+  if value_count <> 100 then raise exception 'Technician inventory RPC expected 100, got %', value_count; end if;
   select count(*) into value_count from public.maintenances where assigned_to = auth.uid();
   if value_count <> 1 then raise exception 'Technician assigned order visibility failed: %', value_count; end if;
   select count(*) into value_count from public.reports;

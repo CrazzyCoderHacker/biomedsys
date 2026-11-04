@@ -178,8 +178,8 @@ as $$
   join public.equipment_models em on em.id = ea.equipment_model_id
   join public.equipment_types et on et.id = em.equipment_type_id
   join public.manufacturers mf on mf.id = em.manufacturer_id
+  join public.hospital_areas ha on ha.id = ea.hospital_area_id
   left join public.equipment_locations el on el.id = ea.location_id
-  left join public.hospital_areas ha on ha.id = el.hospital_area_id
   where ea.active
     and public.has_active_profile()
     and (
@@ -190,6 +190,73 @@ as $$
       em.name ilike '%' || btrim(search_term) || '%' or
       ha.name ilike '%' || btrim(search_term) || '%'
     )
+  order by ea.inventory_code
+$$;
+
+create or replace function public.search_equipment_inventory(
+  search_term text default null,
+  area_filter text default null,
+  risk_filter public.risk_level default null
+)
+returns table (
+  id uuid,
+  inventory_code text,
+  equipment_type text,
+  manufacturer text,
+  model text,
+  serial_number text,
+  manufacture_year smallint,
+  acquisition_year smallint,
+  hospital_area text,
+  location text,
+  custodian_location_text text,
+  status public.equipment_status,
+  requires_review boolean,
+  current_risk_score smallint,
+  current_risk_category public.risk_level
+)
+language sql stable security definer set search_path = public
+as $$
+  select
+    ea.id,
+    ea.inventory_code,
+    et.name,
+    mf.name,
+    em.name,
+    ea.serial_number,
+    ea.manufacture_year,
+    ea.acquisition_year,
+    ha.name,
+    el.name,
+    ea.custodian_location_text,
+    ea.status,
+    ea.requires_review,
+    ra.total_score,
+    ra.category
+  from public.equipment_assets ea
+  join public.equipment_models em on em.id = ea.equipment_model_id
+  join public.equipment_types et on et.id = em.equipment_type_id
+  join public.manufacturers mf on mf.id = em.manufacturer_id
+  join public.hospital_areas ha on ha.id = ea.hospital_area_id
+  left join public.equipment_locations el on el.id = ea.location_id
+  left join lateral (
+    select r.total_score, r.category
+    from public.risk_assessments r
+    where r.equipment_id = ea.id
+    order by r.created_at desc, r.id desc
+    limit 1
+  ) ra on true
+  where ea.active
+    and public.is_technician_or_manager()
+    and (
+      nullif(btrim(search_term), '') is null or
+      ea.inventory_code ilike '%' || btrim(search_term) || '%' or
+      et.name ilike '%' || btrim(search_term) || '%' or
+      mf.name ilike '%' || btrim(search_term) || '%' or
+      em.name ilike '%' || btrim(search_term) || '%'
+    )
+    and (nullif(btrim(area_filter), '') is null or ha.name = btrim(area_filter))
+    and (risk_filter is null or ra.category = risk_filter)
   order by ea.inventory_code
 $$;
 
@@ -220,6 +287,8 @@ $$;
 
 revoke all on function public.search_equipment_directory(text) from public;
 grant execute on function public.search_equipment_directory(text) to authenticated;
+revoke all on function public.search_equipment_inventory(text, text, public.risk_level) from public;
+grant execute on function public.search_equipment_inventory(text, text, public.risk_level) to authenticated;
 revoke all on function public.update_assigned_maintenance_status(bigint, text) from public;
 grant execute on function public.update_assigned_maintenance_status(bigint, text) to authenticated;
 

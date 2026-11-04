@@ -265,6 +265,18 @@ td small { color: #8293a2; margin-top: 3px; font-size: 8px; }
 .filter-bar { padding: 14px 17px; display: flex; gap: 9px; align-items: center; border-bottom: 1px solid var(--line); }
 .search-box { min-height: 39px; max-width: 400px; flex: 1; border: 1px solid var(--line); border-radius: 8px; display: flex; align-items: center; gap: 8px; padding: 0 11px; color: #8798a6; }
 .search-box input { border: 0; outline: none; width: 100%; font-size: 10px; color: var(--ink); }
+.inventory-panel { overflow: hidden; }
+.inventory-select { min-width: 165px; min-height: 39px; border: 1px solid var(--line); border-radius: 8px; padding: 4px 9px; display: flex; flex-direction: column; justify-content: center; }
+.inventory-select span { color: var(--muted); font-size: 7px; line-height: 1; }
+.inventory-select select { border: 0; outline: 0; background: white; color: var(--ink); font-size: 9px; padding: 2px 0 0; }
+.inventory-message { border: 0; box-shadow: none; border-radius: 0; }
+.inventory-inline-empty { min-height: 260px; }
+.inventory-table tbody tr { cursor: pointer; }
+.inventory-table tbody tr:hover { background: #f7fbfe; }
+.row-action { border: 0; background: none; color: var(--primary); font-size: 9px; font-weight: 700; white-space: nowrap; }
+.pagination button:disabled { opacity: .45; cursor: not-allowed; }
+.spin { animation: inventory-spin 1s linear infinite; }
+@keyframes inventory-spin { to { transform: rotate(360deg); } }
 .pagination { min-height: 58px; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; font-size: 9px; color: var(--muted); }
 .pagination div { display: flex; gap: 4px; }
 .pagination button { min-width: 31px; height: 31px; padding: 0 9px; border: 1px solid var(--line); background: white; border-radius: 7px; font-size: 9px; color: var(--muted); }
@@ -302,6 +314,36 @@ td small { color: #8293a2; margin-top: 3px; font-size: 8px; }
 .audit-card strong, .audit-card small { display: block; font-size: 9px; }
 .audit-card small { color: var(--muted); font-size: 8px; margin-top: 3px; }
 .audit-card button { border: 0; background: none; color: var(--primary); display: flex; gap: 4px; font-size: 9px; font-weight: 650; }
+.inventory-access-note { display: flex; gap: 10px; align-items: flex-start; padding: 13px 15px; margin-bottom: 16px; border: 1px solid #c8dded; border-radius: 10px; color: var(--primary); background: #f5faff; }
+.inventory-access-note strong, .inventory-access-note span { display: block; font-size: 10px; }
+.inventory-access-note span { color: var(--muted); font-size: 9px; margin-top: 3px; }
+.inventory-detail-layout .detail-main { overflow: hidden; }
+.detail-empty { color: var(--muted); font-size: 10px; }
+.risk-summary { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
+.risk-summary strong { font-size: 14px; }
+.risk-summary span { color: var(--ink); font-size: 10px; }
+.risk-summary small { width: 100%; color: var(--muted); font-size: 8px; }
+.document-list, .program-list { display: grid; gap: 9px; }
+.document-list article { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 9px; padding: 11px; color: var(--primary); }
+.document-list article > div { flex: 1; }
+.document-list strong, .document-list span { display: block; font-size: 9px; color: var(--ink); }
+.document-list span { margin-top: 3px; color: var(--muted); font-size: 8px; text-transform: capitalize; }
+.document-list a { display: flex; align-items: center; gap: 4px; color: var(--primary); font-size: 9px; font-weight: 700; text-decoration: none; }
+.program-list article { border: 1px solid var(--line); border-radius: 9px; padding: 12px; }
+.program-list article > div { display: flex; align-items: center; gap: 7px; color: var(--primary); }
+.program-list strong { color: var(--ink); font-size: 10px; }
+.program-list p { margin: 9px 0; color: var(--ink); font-size: 9px; line-height: 1.55; white-space: pre-wrap; }
+.program-list article > span { color: var(--muted); font-size: 8px; }
+.inventory-summary-card, .inventory-issues-card { padding: 17px; }
+.inventory-summary-card > div { display: flex; justify-content: space-between; gap: 8px; padding: 9px 0; border-bottom: 1px solid #edf1f4; }
+.inventory-summary-card span, .inventory-summary-card strong { font-size: 9px; }
+.inventory-summary-card span { color: var(--muted); }
+.inventory-issues-card article { padding: 11px 0; border-bottom: 1px solid #edf1f4; }
+.inventory-issues-card article:last-child { border: 0; }
+.inventory-issues-card article strong { display: block; margin: 7px 0 4px; font-size: 9px; text-transform: capitalize; }
+.inventory-issues-card article p, .inventory-issues-card article small { color: var(--muted); font-size: 8px; line-height: 1.45; }
+.inventory-issues-card article small { display: block; margin-top: 5px; overflow-wrap: anywhere; }
+.issue-clear { display: flex; align-items: flex-start; gap: 7px; color: var(--green); font-size: 9px; }
 
 /* Order */
 .order-heading { display: grid; grid-template-columns: 130px 1fr auto; align-items: end; margin-bottom: 19px; }
@@ -494,6 +536,7 @@ td small { color: #8293a2; margin-top: 3px; font-size: 8px; }
   .filter-bar { flex-wrap: wrap; padding: 11px; }
   .search-box { flex-basis: 100%; max-width: none; }
   .filter-bar .btn { flex: 1; }
+  .inventory-select { flex: 1; min-width: 135px; }
   .pagination > span { display: none; }
   .pagination { justify-content: center; }
   .equipment-head { align-items: flex-start; flex-wrap: wrap; }
