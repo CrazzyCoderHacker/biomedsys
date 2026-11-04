@@ -164,6 +164,57 @@ export type InventoryIssue = {
   details: string
 
   review_status: "pendiente" | "confirmado" | "corregido" | "descartado"
+
+  resolution_notes?: string | null
+
+  reviewed_at?: string | null
+}
+
+export type InventoryIssueReview = {
+  id: number
+  issue_id: number
+  review_status: InventoryIssue["review_status"]
+  notes: string
+  justification: string
+  evidence_reference: string | null
+  reviewed_at: string
+}
+
+export type InventoryAdminAsset = {
+  id: string
+  serial_number: string | null
+  serial_is_placeholder: boolean
+  manufacture_year: number | null
+  acquisition_year: number | null
+  hospital_area_id: number
+  location_id: number | null
+  custodian_location_text: string | null
+  status: EquipmentStatus
+}
+
+export type InventoryAdminOption = {
+  id: number
+  name: string
+  hospital_area_id?: number
+}
+
+export type EquipmentProgramConfiguration = {
+  maintenance_program_id: number
+  interval_months: number | null
+  periodicity_basis: string | null
+  periodicity_notes: string | null
+  reference_date: string | null
+  last_completed_on: string | null
+  next_due_on: string | null
+}
+
+export type InventoryAdministrationData = {
+  asset: InventoryAdminAsset
+  areas: InventoryAdminOption[]
+  locations: InventoryAdminOption[]
+  programs: EquipmentProgramConfiguration[]
+  issueReviews: InventoryIssueReview[]
+  technicians: Profile[]
 }
 
 export type EquipmentInventoryBundle = {
@@ -255,6 +306,9 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey)
+
+export const isInventoryAdministrationEnabled =
+  import.meta.env.VITE_INVENTORY_ADMIN_ENABLED === "true"
 
 export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
@@ -939,12 +993,10 @@ export async function getEquipmentInventoryBundle(
       .from("inventory_import_issues")
 
       .select(
-        "id, issue_code, severity, field_name, source_value, details, review_status",
+        "id, issue_code, severity, field_name, source_value, details, review_status, resolution_notes, reviewed_at",
       )
 
       .eq("equipment_id", equipmentId)
-
-      .eq("review_status", "pendiente")
 
       .order("severity", { ascending: false })
 
@@ -986,4 +1038,130 @@ export async function getEquipmentInventoryBundle(
 
     restricted: false,
   }
+}
+
+export async function getInventoryAdministrationData(
+  equipmentId: string,
+  client: SupabaseClient | null = supabase,
+): Promise<InventoryAdministrationData> {
+  const configuredClient = requireSupabase(client)
+  const [assetResult, areasResult, locationsResult, programsResult, reviewsResult, techniciansResult] = await Promise.all([
+    configuredClient
+      .from("equipment_assets")
+      .select("id, serial_number, serial_is_placeholder, manufacture_year, acquisition_year, hospital_area_id, location_id, custodian_location_text, status")
+      .eq("id", equipmentId)
+      .single(),
+    configuredClient.from("hospital_areas").select("id, name").eq("active", true).order("name"),
+    configuredClient.from("equipment_locations").select("id, name, hospital_area_id").eq("active", true).order("name"),
+    configuredClient
+      .from("equipment_maintenance_programs")
+      .select("maintenance_program_id, interval_months, periodicity_basis, periodicity_notes, reference_date, last_completed_on, next_due_on")
+      .eq("equipment_id", equipmentId),
+    configuredClient
+      .from("inventory_issue_reviews")
+      .select("id, issue_id, review_status, notes, justification, evidence_reference, reviewed_at, inventory_import_issues!inner(equipment_id)")
+      .eq("inventory_import_issues.equipment_id", equipmentId)
+      .order("reviewed_at", { ascending: false }),
+    configuredClient
+      .from("profiles")
+      .select("id, institutional_id, full_name, role, department")
+      .eq("role", "tecnico")
+      .order("full_name"),
+  ])
+
+  const failed = [assetResult, areasResult, locationsResult, programsResult, reviewsResult, techniciansResult]
+    .find((result) => result.error)
+  if (failed?.error) throw failed.error
+
+  return {
+    asset: assetResult.data as InventoryAdminAsset,
+    areas: (areasResult.data || []) as InventoryAdminOption[],
+    locations: (locationsResult.data || []) as InventoryAdminOption[],
+    programs: (programsResult.data || []) as EquipmentProgramConfiguration[],
+    issueReviews: (reviewsResult.data || []) as InventoryIssueReview[],
+    technicians: (techniciansResult.data || []) as Profile[],
+  }
+}
+
+export async function updateEquipmentAssetAdmin(
+  asset: InventoryAdminAsset,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc("update_equipment_asset_admin", {
+    target_equipment_id: asset.id,
+    new_serial_number: asset.serial_number,
+    new_serial_is_placeholder: asset.serial_is_placeholder,
+    new_manufacture_year: asset.manufacture_year,
+    new_acquisition_year: asset.acquisition_year,
+    new_hospital_area_id: asset.hospital_area_id,
+    new_location_id: asset.location_id,
+    new_custodian_location_text: asset.custodian_location_text,
+    new_status: asset.status,
+  })
+  if (error) throw error
+  return data as InventoryAdminAsset
+}
+
+export async function configureEquipmentPreventiveProgram(
+  equipmentId: string,
+  configuration: EquipmentProgramConfiguration,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc("configure_equipment_preventive_program", {
+    target_equipment_id: equipmentId,
+    target_program_id: configuration.maintenance_program_id,
+    new_interval_months: configuration.interval_months,
+    new_periodicity_basis: configuration.periodicity_basis,
+    new_periodicity_notes: configuration.periodicity_notes,
+    new_reference_date: configuration.reference_date,
+    new_last_completed_on: configuration.last_completed_on,
+  })
+  if (error) throw error
+  return data as EquipmentProgramConfiguration
+}
+
+export async function schedulePreventiveMaintenance(
+  input: {
+    equipmentId: string
+    programId: number
+    scheduledAt: string
+    assignedTo: string | null
+    priority: "critica" | "alta" | "ordinaria"
+  },
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc("schedule_preventive_maintenance", {
+    target_equipment_id: input.equipmentId,
+    target_program_id: input.programId,
+    target_scheduled_at: input.scheduledAt,
+    target_assigned_to: input.assignedTo,
+    target_priority: input.priority,
+  })
+  if (error) throw error
+  return data as MaintenanceSummary
+}
+
+export async function reviewInventoryIssue(
+  input: {
+    issueId: number
+    status: Exclude<InventoryIssue["review_status"], "pendiente">
+    notes: string
+    justification: string
+    evidenceReference: string | null
+  },
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc("review_inventory_issue", {
+    target_issue_id: input.issueId,
+    new_review_status: input.status,
+    review_notes: input.notes,
+    review_justification: input.justification,
+    review_evidence_reference: input.evidenceReference,
+  })
+  if (error) throw error
+  return data as InventoryIssue
 }

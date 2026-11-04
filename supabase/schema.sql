@@ -15,5 +15,6 @@
 -- 11_inventory_relations.sql
 -- 05_security.sql (execute after all module tables)
 -- 12_inventory_security.sql
+-- 13_inventory_administration.sql (deploy only after explicit approval)
 --
 -- Import data only after reviewing the generated inventory issue report.

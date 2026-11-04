@@ -13,6 +13,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { Button, PageIntro } from "./ui";
+import { InventoryAdministration, inventoryIssueLabel } from "./InventoryAdministration";
 import {
   getEquipmentInventoryBundle,
   getInventoryCapabilities,
@@ -264,7 +265,7 @@ function safeDocumentUrl(url: string) {
   }
 }
 
-function DetailContent({ bundle, role }: { bundle: EquipmentInventoryBundle; role: Role }) {
+function DetailContent({ bundle, role, onChanged }: { bundle: EquipmentInventoryBundle; role: Role; onChanged: () => void }) {
   const { equipment, risks, documents, programs, issues, restricted } = bundle;
   const currentRisk = risks[0];
   return (
@@ -373,14 +374,15 @@ function DetailContent({ bundle, role }: { bundle: EquipmentInventoryBundle; rol
           </section>
           {role === "jefe" && (
             <section className="panel inventory-issues-card">
-              <h3>Incidencias pendientes</h3>
+              <h3>Incidencias del inventario</h3>
               {issues.length === 0 ? (
-                <div className="issue-clear"><CheckCircle2 size={18} /><span>Sin incidencias pendientes para este equipo.</span></div>
+                <div className="issue-clear"><CheckCircle2 size={18} /><span>Sin incidencias registradas para este equipo.</span></div>
               ) : issues.map((issue) => (
                 <article key={issue.id}>
                   <Badge tone={issue.severity === "error" ? "danger" : issue.severity === "advertencia" ? "warning" : "info"}>{issue.severity}</Badge>
-                  <strong>{issue.issue_code.replace(/_/g, " ")}</strong>
+                  <strong>{inventoryIssueLabel(issue.issue_code)}</strong>
                   <p>{issue.details}</p>
+                  <small>Estado de revisión: {issue.review_status}</small>
                   {issue.source_value && <small>Valor original: {issue.source_value}</small>}
                 </article>
               ))}
@@ -388,6 +390,7 @@ function DetailContent({ bundle, role }: { bundle: EquipmentInventoryBundle; rol
           )}
         </aside>
       </div>
+      {role === "jefe" && <InventoryAdministration bundle={bundle} onChanged={onChanged} />}
     </>
   );
 }
@@ -431,7 +434,7 @@ export function EquipmentDetail({
         <ErrorState message="No se seleccionó ningún equipo." onRetry={onBack} />
       ) : loading ? <LoadingState message="Cargando ficha del equipo..." /> : error ? (
         <ErrorState message={error} onRetry={() => setReloadToken((value) => value + 1)} />
-      ) : bundle ? <DetailContent bundle={bundle} role={role} /> : null}
+      ) : bundle ? <DetailContent bundle={bundle} role={role} onChanged={() => setReloadToken((value) => value + 1)} /> : null}
     </>
   );
 }

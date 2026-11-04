@@ -42,6 +42,7 @@ La persistencia usa la base PostgreSQL administrada por Supabase. El cliente web
    - [`11_inventory_relations.sql`](./supabase/11_inventory_relations.sql) — enlaza inventario con reportes y órdenes.
    - [`05_security.sql`](./supabase/05_security.sql) — ejecutar al final, después de crear todas las tablas.
    - [`12_inventory_security.sql`](./supabase/12_inventory_security.sql) — permisos del inventario para usuario, técnico y jefe.
+   - [`13_inventory_administration.sql`](./supabase/13_inventory_administration.sql) — administración auditada, periodicidad por equipo y revisión de incidencias. Requiere aprobación separada antes de activar sus controles en el frontend.
 
    [`schema.sql`](./supabase/schema.sql) funciona como índice y define el orden. Los módulos tienen scripts separados para poder evolucionar usuarios, inventario, mantenimientos, reportes y futuras áreas sin mezclar cambios.
 4. En Authentication > Users crea cada cuenta con el correo técnico `<ID_DE_8_DIGITOS>@biomedgest.local` y su contraseña. Después vuelve a ejecutar [`01_users.sql`](./supabase/01_users.sql); su bloque final enlaza automáticamente los tres usuarios Auth con sus perfiles:

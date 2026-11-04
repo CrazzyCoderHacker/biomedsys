@@ -343,6 +343,22 @@ td small { color: #8293a2; margin-top: 3px; font-size: 8px; }
 .inventory-issues-card article strong { display: block; margin: 7px 0 4px; font-size: 9px; text-transform: capitalize; }
 .inventory-issues-card article p, .inventory-issues-card article small { color: var(--muted); font-size: 8px; line-height: 1.45; }
 .inventory-issues-card article small { display: block; margin-top: 5px; overflow-wrap: anywhere; }
+.inventory-admin-disabled { margin-top: 16px; padding: 16px; display: flex; align-items: flex-start; gap: 11px; color: var(--amber); }
+.inventory-admin-disabled strong { color: var(--ink); font-size: 11px; }
+.inventory-admin-disabled p { margin: 5px 0 0; color: var(--muted); font-size: 9px; line-height: 1.5; }
+.inventory-admin-layout { margin-top: 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.inventory-admin-card { padding: 18px; }
+.inventory-admin-card h3 { margin: 0 0 7px; display: flex; align-items: center; gap: 7px; font-size: 12px; }
+.inventory-admin-card > p, .inventory-admin-card form > p { color: var(--muted); font-size: 9px; line-height: 1.5; }
+.inventory-admin-card .check-inline { align-self: center; margin-bottom: 15px; }
+.inventory-admin-message { margin: 10px 0; padding: 8px 10px; border-radius: 7px; background: var(--primary-soft); color: var(--primary) !important; }
+.inventory-schedule-form { margin-top: 18px; padding-top: 15px; border-top: 1px solid var(--line); }
+.inventory-schedule-form h4 { margin: 0 0 12px; font-size: 10px; }
+.inventory-review-panel { grid-column: 1 / -1; }
+.inventory-issue-review { padding: 14px 0; border-top: 1px solid var(--line); }
+.inventory-issue-review > strong { display: block; font-size: 10px; }
+.inventory-issue-review > p, .inventory-issue-review > span, .inventory-issue-review details { color: var(--muted); font-size: 9px; line-height: 1.5; }
+.inventory-issue-review form { max-width: 720px; margin-top: 12px; }
 .issue-clear { display: flex; align-items: flex-start; gap: 7px; color: var(--green); font-size: 9px; }
 
 /* Order */
@@ -553,6 +569,7 @@ td small { color: #8293a2; margin-top: 3px; font-size: 8px; }
   .order-progress span { display: none; }
   .form-panel, .checklist-panel { padding: 15px; }
   .form-grid { display: block; }
+  .inventory-admin-layout { grid-template-columns: 1fr; }
   .subsection-head { align-items: flex-start; gap: 10px; }
   .evidence-box { align-items: flex-start; flex-direction: column; }
   .evidence-box .btn { width: 100%; }

@@ -11,6 +11,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+$projectPython = Join-Path $repoRoot '.venv-inventory\Scripts\python.exe'
+if ($PythonExecutable -eq 'py' -and (Test-Path -LiteralPath $projectPython -PathType Leaf)) {
+    $PythonExecutable = $projectPython
+}
 $sourcePath = (Resolve-Path -LiteralPath $SourceXlsx).Path
 $tempBase = [IO.Path]::GetFullPath([IO.Path]::GetTempPath())
 $runRoot = Join-Path $tempBase ("biomedgest-inventory-validation-{0}" -f [guid]::NewGuid().ToString('N'))
@@ -60,6 +64,7 @@ $migrationFiles = @(
     'supabase\11_inventory_relations.sql',
     'supabase\05_security.sql',
     'supabase\12_inventory_security.sql',
+    'supabase\13_inventory_administration.sql',
     'scripts\inventory\local_grants.sql'
 )
 
@@ -82,6 +87,7 @@ try {
     }
     Invoke-PsqlFile (Join-Path $generatedDir 'inventory_import.sql')
     Invoke-PsqlFile (Join-Path $repoRoot 'scripts\inventory\validate_inventory_database.sql')
+    Invoke-PsqlFile (Join-Path $repoRoot 'scripts\inventory\validate_inventory_administration.sql')
 
     # Segunda ejecución: demuestra que migraciones e importación son repetibles.
     foreach ($relativePath in $migrationFiles) {
