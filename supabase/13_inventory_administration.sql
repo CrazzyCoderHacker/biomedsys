@@ -388,16 +388,16 @@ begin
 end;
 $$;
 
-revoke all on function public.update_equipment_asset_admin(uuid, text, boolean, smallint, smallint, bigint, bigint, text, public.equipment_status) from public;
+revoke all on function public.update_equipment_asset_admin(uuid, text, boolean, smallint, smallint, bigint, bigint, text, public.equipment_status) from public, anon;
 grant execute on function public.update_equipment_asset_admin(uuid, text, boolean, smallint, smallint, bigint, bigint, text, public.equipment_status) to authenticated;
 
-revoke all on function public.configure_equipment_preventive_program(uuid, bigint, smallint, text, text, date, date) from public;
+revoke all on function public.configure_equipment_preventive_program(uuid, bigint, smallint, text, text, date, date) from public, anon;
 grant execute on function public.configure_equipment_preventive_program(uuid, bigint, smallint, text, text, date, date) to authenticated;
 
-revoke all on function public.schedule_preventive_maintenance(uuid, bigint, timestamptz, uuid, text) from public;
+revoke all on function public.schedule_preventive_maintenance(uuid, bigint, timestamptz, uuid, text) from public, anon;
 grant execute on function public.schedule_preventive_maintenance(uuid, bigint, timestamptz, uuid, text) to authenticated;
 
-revoke all on function public.review_inventory_issue(bigint, public.inventory_review_status, text, text, text) from public;
+revoke all on function public.review_inventory_issue(bigint, public.inventory_review_status, text, text, text) from public, anon;
 grant execute on function public.review_inventory_issue(bigint, public.inventory_review_status, text, text, text) to authenticated;
 
 do $$
