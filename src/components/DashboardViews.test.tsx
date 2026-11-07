@@ -21,6 +21,7 @@ const manager: Profile = {
   full_name: "Jefatura Biomédica",
   role: "jefe",
   department: "Ingeniería Clínica",
+  active: true,
 }
 
 function equipment(index: number): EquipmentInventoryDetail {

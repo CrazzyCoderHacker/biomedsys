@@ -23,7 +23,7 @@ const adminData: InventoryAdministrationData = {
   locations: [{ id: 2, name: "Cubículo 1", hospital_area_id: 1 }],
   programs: [{ maintenance_program_id: 4, interval_months: null, periodicity_basis: null, periodicity_notes: null, reference_date: null, last_completed_on: null, next_due_on: null }],
   issueReviews: [],
-  technicians: [{ id: "tech-1", institutional_id: "T001", full_name: "Técnico Prueba", role: "tecnico", department: null }],
+  technicians: [{ id: "tech-1", institutional_id: "T001", full_name: "Técnico Prueba", role: "tecnico", department: null, active: true }],
 }
 
 function api(): InventoryAdministrationApi {

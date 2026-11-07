@@ -97,17 +97,12 @@ begin
   raise notice 'PASS: manager inventory permissions';
 end $$;
 
-insert into public.maintenances (
-  maintenance_number, maintenance_code, equipment_identifier, equipment_id,
-  status, scheduled_at, assigned_to, created_by
-)
-select '', 'MC', inventory_code, id, 'programado', now() + interval '1 day',
-  '00000000-0000-0000-0000-000000000002', auth.uid()
-from public.equipment_assets where inventory_code = 'EQ-000001';
-
-update public.reports
-set maintenance_id = (select id from public.maintenances where equipment_identifier = 'EQ-000001' limit 1)
-where reporter_id = '00000000-0000-0000-0000-000000000003';
+select (public.create_corrective_order_from_report(
+  (select id from public.reports where reporter_id = '00000000-0000-0000-0000-000000000003' limit 1),
+  '00000000-0000-0000-0000-000000000002',
+  'ordinaria',
+  now() - interval '1 day'
+)).maintenance_number;
 
 do $$
 declare value_count integer;
@@ -125,7 +120,7 @@ set role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000002', false);
 
 do $$
-declare value_count integer; affected integer;
+declare value_count integer; affected integer; blocked boolean := false;
 begin
   select count(*) into value_count from public.equipment_assets;
   if value_count <> 100 then raise exception 'Technician expected 100 assets, got %', value_count; end if;
@@ -140,9 +135,13 @@ begin
   update public.equipment_assets set status = 'fuera_de_servicio' where inventory_code = 'EQ-000001';
   get diagnostics affected = row_count;
   if affected <> 0 then raise exception 'Technician updated inventory master data'; end if;
-  update public.maintenances set priority = 'critica' where assigned_to = auth.uid();
-  get diagnostics affected = row_count;
-  if affected <> 0 then raise exception 'Technician bypassed status RPC'; end if;
+  begin
+    update public.maintenances set priority = 'critica' where assigned_to = auth.uid();
+    get diagnostics affected = row_count;
+    blocked := affected = 0;
+  exception when insufficient_privilege then blocked := true;
+  end;
+  if not blocked then raise exception 'Technician bypassed status RPC'; end if;
   raise notice 'PASS: technician read and master-data restrictions';
 end $$;
 
@@ -155,22 +154,29 @@ insert into public.maintenance_activities (maintenance_id, activity, completed)
 select id, 'Actividad de validación local', true
 from public.maintenances where assigned_to = auth.uid();
 
-insert into public.maintenance_records (
-  maintenance_id, performed_by, started_at, diagnosis, work_performed, equipment_condition
-)
-select id, auth.uid(), now(), 'Diagnóstico local', 'Prueba local', 'en_reparacion'
-from public.maintenances where assigned_to = auth.uid();
+select (public.save_corrective_intervention(
+  (select id from public.maintenances where assigned_to = auth.uid() limit 1),
+  now() - interval '2 hours', null,
+  'Diagnóstico local', 'Prueba local', null, 'en_reparacion', 'Expediente en progreso'
+)).id;
 
 do $$
-declare value_count integer;
+declare
+  value_count integer;
+  delete_blocked boolean := false;
 begin
   select count(*) into value_count from public.maintenance_activities;
   if value_count <> 1 then raise exception 'Technician activity insert failed: %', value_count; end if;
   select count(*) into value_count from public.maintenance_records;
   if value_count <> 1 then raise exception 'Technician maintenance record insert failed: %', value_count; end if;
-  delete from public.maintenance_records where performed_by = auth.uid();
-  get diagnostics value_count = row_count;
-  if value_count <> 0 then raise exception 'Technician deleted a maintenance record'; end if;
+  begin
+    delete from public.maintenance_records where performed_by = auth.uid();
+    get diagnostics value_count = row_count;
+    delete_blocked := value_count = 0;
+  exception
+    when insufficient_privilege then delete_blocked := true;
+  end;
+  if not delete_blocked then raise exception 'Technician deleted a maintenance record'; end if;
   select count(*) into value_count from public.maintenances where status = 'en_proceso';
   if value_count <> 1 then raise exception 'Technician status RPC failed: %', value_count; end if;
   raise notice 'PASS: technician assigned-order workflow';

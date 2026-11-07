@@ -50,7 +50,7 @@ function Invoke-PythonImporter {
     if ($LASTEXITCODE -ne 0) { throw 'Falló la generación del paquete de importación.' }
 }
 
-$migrationFiles = @(
+$baseMigrationFiles = @(
     'scripts\inventory\local_supabase_bootstrap.sql',
     'supabase\00_core.sql',
     'supabase\01_users.sql',
@@ -62,11 +62,37 @@ $migrationFiles = @(
     'supabase\09_audit.sql',
     'supabase\10_access_requests.sql',
     'supabase\11_inventory_relations.sql',
+    'scripts\inventory\local_grants.sql',
     'supabase\05_security.sql',
     'supabase\12_inventory_security.sql',
     'supabase\13_inventory_administration.sql',
-    'scripts\inventory\local_grants.sql'
+    'supabase\14_security_hardening.sql'
 )
+
+$pendingMigrationStages = @(
+    @{
+        Preflight = 'scripts\inventory\preflight_15_readonly.sql'
+        Migration = 'supabase\15_corrective_workflow.sql'
+        Postflight = 'scripts\inventory\verify_corrective_workflow_postflight.sql'
+    },
+    @{
+        Preflight = 'scripts\inventory\preflight_16_readonly.sql'
+        Migration = 'supabase\16_operational_completion.sql'
+        Postflight = 'scripts\inventory\verify_operational_completion_postflight.sql'
+    },
+    @{
+        Preflight = 'scripts\inventory\preflight_17_readonly.sql'
+        Migration = 'supabase\17_training_quotes_completion.sql'
+        Postflight = 'scripts\inventory\verify_business_completion_postflight.sql'
+    },
+    @{
+        Preflight = 'scripts\inventory\preflight_18_readonly.sql'
+        Migration = 'supabase\18_final_integration.sql'
+        Postflight = 'scripts\inventory\verify_final_integration_postflight.sql'
+    }
+)
+
+$migrationFiles = @($baseMigrationFiles) + @($pendingMigrationStages | ForEach-Object { $_.Migration })
 
 try {
     New-Item -ItemType Directory -Path $runRoot, $generatedDir | Out-Null
@@ -82,12 +108,29 @@ try {
 
     Invoke-PythonImporter
 
-    foreach ($relativePath in $migrationFiles) {
+    foreach ($relativePath in $baseMigrationFiles) {
         Invoke-PsqlFile (Join-Path $repoRoot $relativePath)
     }
     Invoke-PsqlFile (Join-Path $generatedDir 'inventory_import.sql')
+
+    foreach ($stage in $pendingMigrationStages) {
+        Invoke-PsqlFile (Join-Path $repoRoot $stage.Preflight)
+        Invoke-PsqlFile (Join-Path $repoRoot $stage.Migration)
+        Invoke-PsqlFile (Join-Path $repoRoot $stage.Postflight)
+    }
+
     Invoke-PsqlFile (Join-Path $repoRoot 'scripts\inventory\validate_inventory_database.sql')
     Invoke-PsqlFile (Join-Path $repoRoot 'scripts\inventory\validate_inventory_administration.sql')
+    Invoke-PsqlFile (Join-Path $repoRoot 'scripts\inventory\validate_security_hardening.sql')
+    Invoke-PsqlFile (Join-Path $repoRoot 'scripts\inventory\verify_security_hardening_postflight.sql')
+    Invoke-PsqlFile (Join-Path $repoRoot 'scripts\inventory\validate_corrective_workflow.sql')
+    Invoke-PsqlFile (Join-Path $repoRoot 'scripts\inventory\verify_corrective_workflow_postflight.sql')
+    Invoke-PsqlFile (Join-Path $repoRoot 'scripts\inventory\validate_operational_completion.sql')
+    Invoke-PsqlFile (Join-Path $repoRoot 'scripts\inventory\verify_operational_completion_postflight.sql')
+    Invoke-PsqlFile (Join-Path $repoRoot 'scripts\inventory\validate_training_quotes_completion.sql')
+    Invoke-PsqlFile (Join-Path $repoRoot 'scripts\inventory\verify_business_completion_postflight.sql')
+    Invoke-PsqlFile (Join-Path $repoRoot 'scripts\inventory\validate_final_integration.sql')
+    Invoke-PsqlFile (Join-Path $repoRoot 'scripts\inventory\verify_final_integration_postflight.sql')
 
     # Segunda ejecución: demuestra que migraciones e importación son repetibles.
     foreach ($relativePath in $migrationFiles) {
@@ -105,7 +148,15 @@ select json_build_object(
   'document_links', (select count(*) from public.equipment_document_links),
   'review_issues', (select count(*) from public.inventory_import_issues),
   'rls_tables', (select count(*) from pg_class where relnamespace = 'public'::regnamespace and relrowsecurity),
-  'policies', (select count(*) from pg_policies where schemaname = 'public')
+  'policies', (select count(*) from pg_policies where schemaname = 'public'),
+  'base_tables', (select count(*) from pg_tables where schemaname = 'public'),
+  'views', (select count(*) from pg_views where schemaname = 'public'),
+  'functions', (select count(*) from pg_proc where pronamespace = 'public'::regnamespace),
+  'triggers', (
+    select count(*) from pg_trigger t
+    join pg_class c on c.oid = t.tgrelid
+    where c.relnamespace = 'public'::regnamespace and not t.tgisinternal
+  )
 );
 '@
     if ($LASTEXITCODE -ne 0) { throw 'Falló el resumen final.' }
