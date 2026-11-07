@@ -1986,4 +1986,56 @@ insert into public.inventory_import_issues (source_batch_id, equipment_id, sourc
 insert into public.inventory_import_issues (source_batch_id, equipment_id, source_sheet, source_row, issue_code, severity, field_name, source_value, details) select 'ee21d240-cd92-5274-b5fa-4c16c52f4401'::uuid, ea.id, 'Hoja1', 101, 'missing_specific_location', 'advertencia', 'Guarda de equipo', '', 'Falta ubicación específica; se conserva el área hospitalaria.' from public.equipment_assets ea where ea.inventory_code = 'EQ-000100' on conflict do nothing;
 insert into public.inventory_import_issues (source_batch_id, equipment_id, source_sheet, source_row, issue_code, severity, field_name, source_value, details) select 'ee21d240-cd92-5274-b5fa-4c16c52f4401'::uuid, ea.id, 'Hoja1', 101, 'maintenance_periodicity_missing', 'advertencia', 'Periodicidad', '', 'El Excel contiene la rutina, pero no la frecuencia preventiva.' from public.equipment_assets ea where ea.inventory_code = 'EQ-000100' on conflict do nothing;
 update public.inventory_import_batches set status = 'validado' where id = 'ee21d240-cd92-5274-b5fa-4c16c52f4401'::uuid;
+-- Validación final de la importación
+DO $$
+BEGIN
+    IF (SELECT COUNT(*) FROM public.equipment_assets) <> 100 THEN
+        RAISE EXCEPTION 'La cantidad de equipos no es 100';
+    END IF;
+
+    IF (SELECT COUNT(*) FROM public.risk_assessments) <> 100 THEN
+        RAISE EXCEPTION 'La cantidad de riesgos no es 100';
+    END IF;
+
+    IF (SELECT COUNT(*) FROM public.maintenance_programs) <> 44 THEN
+        RAISE EXCEPTION 'La cantidad de rutinas no es 44';
+    END IF;
+
+    IF (SELECT COUNT(*) FROM public.equipment_document_links) <> 199 THEN
+        RAISE EXCEPTION 'La cantidad de vinculos no es 199';
+    END IF;
+
+    IF (SELECT COUNT(*) FROM public.inventory_import_issues) <> 162 THEN
+        RAISE EXCEPTION 'La cantidad de incidencias no es 162';
+    END IF;
+
+    IF (SELECT COUNT(*) FROM public.equipment_assets
+        WHERE serial_is_placeholder = TRUE) <> 6 THEN
+        RAISE EXCEPTION 'Cantidad inesperada de seriales S/N';
+    END IF;
+
+    IF (
+        SELECT COUNT(*)
+        FROM (
+            SELECT serial_number
+            FROM public.equipment_assets
+            WHERE serial_is_placeholder = FALSE
+              AND NULLIF(TRIM(serial_number), '') IS NOT NULL
+            GROUP BY serial_number
+            HAVING COUNT(*) > 1
+        ) AS duplicados
+    ) <> 1 THEN
+        RAISE EXCEPTION 'Duplicados reales inesperados';
+    END IF;
+
+    IF (
+        SELECT COUNT(*)
+        FROM public.equipment_assets
+        WHERE inventory_code IN ('EQ-000052', 'EQ-000053')
+          AND serial_number = '3979000122'
+          AND serial_is_placeholder = FALSE
+    ) <> 2 THEN
+        RAISE EXCEPTION 'El par de seriales duplicados no coincide';
+    END IF;
+END $$;
 commit;

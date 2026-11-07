@@ -16,5 +16,10 @@
 -- 05_security.sql (execute after all module tables)
 -- 12_inventory_security.sql
 -- 13_inventory_administration.sql (deploy only after explicit approval)
+-- 14_security_hardening.sql (active profiles, non-destructive policies and order transitions)
+-- 15_corrective_workflow.sql (transactional reports and corrective maintenance)
+-- 16_operational_completion.sql (private files, preventive workflow, notifications and administration)
+-- 17_training_quotes_completion.sql (attendance, training transitions and quote concepts)
+-- 18_final_integration.sql (file lifecycle, Auth support, relations and timelines)
 --
 -- Import data only after reviewing the generated inventory issue report.
