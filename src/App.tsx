@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from "react"
 
 import {
+  createCorrectiveOrderFromReport,
   createReport,
   getCurrentProfile,
+  getReportIdByNumber,
+  isOperationalCompletionEnabled,
   isSupabaseConfigured,
+  listActiveTechnicians,
   listReports,
-  updateReportWorkflow,
   signInWithInstitutionalId,
+  uploadPrivateAttachment,
   supabase,
   type CreateReportInput,
   type EquipmentInventoryDetail,
@@ -46,13 +50,15 @@ import {
   ShieldCheck,
   Stethoscope,
   Users,
+  Upload,
   Wifi,
   Wrench,
   X,
   Zap,
 } from "lucide-react"
 
-import { NoticesView } from "./components/TrainingViews"
+import { NoticesView, TrainingCalendar } from "./components/TrainingViews"
+import { InstitutionSettingsView, NotificationsView, PasswordChangeGate, ProfileView } from "./components/PlatformViews"
 
 import {
   AuditView,
@@ -71,7 +77,7 @@ import {
   ServiceOrdersView,
 } from "./components/OperationalViews"
 
-type View = "dashboard" | "reportes" | "inventario" | "equipo" | "orden" | "calendario" | "avisos" | "cotizaciones" | "usuarios" | "trazabilidad" | "documentos"
+type View = "dashboard" | "reportes" | "inventario" | "equipo" | "orden" | "calendario" | "avisos" | "cotizaciones" | "usuarios" | "trazabilidad" | "documentos" | "capacitaciones" | "notificaciones" | "configuracion" | "perfil"
 
 const roleMeta = {
   jefe: { label: "Jefe de Ingeniería Clínica", short: "Jefe", initials: "AM" },
@@ -183,6 +189,8 @@ const navigation: Record<Role, {
     { label: "Mantenimiento", view: "calendario", icon: CalendarDays },
 
     { label: "Documentos", view: "documentos", icon: FileText },
+    { label: "Capacitaciones", view: "capacitaciones", icon: CalendarDays },
+    { label: "Notificaciones", view: "notificaciones", icon: Bell },
   ],
 
   tecnico: [
@@ -195,6 +203,8 @@ const navigation: Record<Role, {
     { label: "Inventario", view: "inventario", icon: MonitorCog },
 
     { label: "Documentos", view: "documentos", icon: FileText },
+    { label: "Capacitaciones", view: "capacitaciones", icon: CalendarDays },
+    { label: "Notificaciones", view: "notificaciones", icon: Bell },
   ],
 
   usuario: [
@@ -205,6 +215,7 @@ const navigation: Record<Role, {
     { label: "Solicitud de equipo", view: "inventario", icon: Search },
 
     { label: "Avisos", view: "avisos", icon: Bell },
+    { label: "Notificaciones", view: "notificaciones", icon: Bell },
   ],
 }
 
@@ -328,6 +339,7 @@ function Sidebar({
   setView,
 
   onLogout,
+  onProfile,
 }: {
   profile: Profile
 
@@ -336,6 +348,7 @@ function Sidebar({
   setView: (view: View) => void
 
   onLogout: () => void
+  onProfile: () => void
 }) {
   const role = profile.role
 
@@ -377,21 +390,23 @@ function Sidebar({
               <FileText size={19} />
               <span>Cotizaciones</span>
             </button>
-            <button>
+            <button type="button" onClick={() => setView("configuracion")}>
               <Settings size={19} />
               <span>Configuración</span>
             </button>
           </>
         )}
       </nav>
-      <button className="profile" onClick={onLogout}>
+      <div className="profile">
+        <button type="button" className="profile-main" onClick={onProfile}>
         <span className="avatar">{initials}</span>
         <span>
           <strong>{profile.full_name}</strong>
           <small>{roleMeta[role].label}</small>
         </span>
-        <LogOut size={17} />
-      </button>
+        </button>
+        <button type="button" className="icon-btn" aria-label="Cerrar sesión" title="Cerrar sesión" onClick={onLogout}><LogOut size={17} /></button>
+      </div>
     </aside>
   )
 }
@@ -463,29 +478,44 @@ function PageIntro({
   )
 }
 
-function ReportWorkflowEditor({ report, onSaved }: { report: ReportSummary; onSaved: (report: ReportSummary) => void }) {
-  const [priority, setPriority] = useState(report.priority)
-  const [status, setStatus] = useState(report.status)
+function ReportWorkflowEditor({ report, technicians, onCreated }: { report: ReportSummary; technicians: Profile[]; onCreated: () => void }) {
+  const [priority, setPriority] = useState<"critica" | "alta" | "ordinaria">(
+    report.priority === "Crítica" ? "critica" : report.priority === "Alta" ? "alta" : "ordinaria",
+  )
+  const [assignedTo, setAssignedTo] = useState("")
+  const [scheduledAt, setScheduledAt] = useState(() => {
+    const now = new Date()
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
+  })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
 
   async function save() {
+    if (!assignedTo || !scheduledAt) {
+      setError("Selecciona un técnico activo y la fecha de atención.")
+      return
+    }
     setSaving(true)
     setError("")
     try {
-      onSaved(await updateReportWorkflow(report.report_number, { priority, status }))
+      await createCorrectiveOrderFromReport(report.id, assignedTo, priority, new Date(scheduledAt).toISOString())
+      onCreated()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "No fue posible actualizar el reporte.")
+      setError(cause instanceof Error ? cause.message : "No fue posible crear la orden correctiva.")
     } finally {
       setSaving(false)
     }
   }
 
+  if (report.maintenance_id)
+    return <div className="report-workflow-editor"><Badge>Orden vinculada</Badge><Badge>{report.status}</Badge></div>
+
   return (
     <div className="report-workflow-editor">
-      <label><span>Prioridad</span><select aria-label={`Prioridad de ${report.report_number}`} value={priority} onChange={(event) => setPriority(event.target.value)}><option>Crítica</option><option>Alta</option><option>Ordinaria</option></select></label>
-      <label><span>Estado</span><select aria-label={`Estado de ${report.report_number}`} value={status} onChange={(event) => setStatus(event.target.value)}><option>Recibido</option><option>Clasificado</option><option>Asignado</option><option>En atención</option><option>Resuelto</option><option>Cerrado</option></select></label>
-      <button type="button" className="row-action" disabled={saving || (priority === report.priority && status === report.status)} onClick={save}>{saving ? "Guardando..." : "Guardar gestión"}</button>
+      <label><span>Prioridad</span><select aria-label={`Prioridad de ${report.report_number}`} value={priority} onChange={(event) => setPriority(event.target.value as typeof priority)}><option value="critica">Crítica</option><option value="alta">Alta</option><option value="ordinaria">Ordinaria</option></select></label>
+      <label><span>Técnico</span><select aria-label={`Técnico de ${report.report_number}`} value={assignedTo} onChange={(event) => setAssignedTo(event.target.value)}><option value="">Seleccionar</option>{technicians.map((technician) => <option key={technician.id} value={technician.id}>{technician.full_name}</option>)}</select></label>
+      <label><span>Atención</span><input aria-label={`Fecha de atención de ${report.report_number}`} type="datetime-local" value={scheduledAt} onChange={(event) => setScheduledAt(event.target.value)} /></label>
+      <button type="button" className="row-action" disabled={saving || technicians.length === 0} onClick={save}>{saving ? "Creando..." : "Clasificar y crear orden"}</button>
       {error && <small className="form-error" role="alert">{error}</small>}
     </div>
   )
@@ -503,6 +533,8 @@ function ReportTray({
   const [reports, setReports] =
     useState<Awaited<ReturnType<typeof listReports>>>([])
 
+  const [technicians, setTechnicians] = useState<Profile[]>([])
+
   const [error, setError] = useState("")
 
   const [loading, setLoading] = useState(true)
@@ -514,17 +546,30 @@ function ReportTray({
   const [status, setStatus] = useState("")
 
   useEffect(() => {
-    listReports()
-      .then(setReports)
-      .catch((reportError) => {
-        setError(
-          reportError instanceof Error
-            ? reportError.message
-            : "No fue posible cargar los reportes.",
-        )
-      })
-      .finally(() => setLoading(false))
-  }, [])
+    const load = () => {
+      setLoading(true)
+      setError("")
+      Promise.all([
+        listReports(),
+        role === "jefe" ? listActiveTechnicians() : Promise.resolve([]),
+      ])
+        .then(([reportRows, technicianRows]) => {
+          setReports(reportRows)
+          setTechnicians(technicianRows)
+        })
+        .catch((reportError) => {
+          setError(
+            reportError instanceof Error
+              ? reportError.message
+              : "No fue posible cargar los reportes.",
+          )
+        })
+        .finally(() => setLoading(false))
+    }
+    load()
+    window.addEventListener("biomedgest:reports-changed", load)
+    return () => window.removeEventListener("biomedgest:reports-changed", load)
+  }, [role])
 
   const filteredReports = useMemo(
     () =>
@@ -644,10 +689,16 @@ function ReportTray({
                   <small>
                     {report.equipment_identifier} · {report.service}
                   </small>
+                  <details className="report-detail">
+                    <summary>Ver detalle</summary>
+                    <span>{report.event_type} · {report.event_date}</span>
+                    <span>{report.manufacturer || "Fabricante no registrado"} · {report.model_serial || "Modelo/serie no registrado"}</span>
+                    <span>{report.location || "Ubicación no registrada"}</span>
+                    <span>Consecuencia: {report.patient_outcome || "No registrada"}</span>
+                    <span>Acción inicial: {report.action_taken || "No registrada"}</span>
+                  </details>
                 </div>
-                {role === "jefe" && (
-                  <ReportWorkflowEditor report={report} onSaved={(updated) => setReports((current) => current.map((item) => item.report_number === updated.report_number ? updated : item))} />
-                )}
+                {role === "jefe" && <ReportWorkflowEditor report={report} technicians={technicians} onCreated={() => listReports().then(setReports).catch(() => undefined)} />}
                 {role !== "jefe" && <><Badge>{report.priority}</Badge><Badge>{report.status}</Badge></>}
                 {role === "jefe" && <Button variant="secondary" onClick={() => setView("orden")}>Ver órdenes</Button>}
                 <ChevronRight size={18} />
@@ -664,6 +715,10 @@ export function ReportModal({ onClose, role }: { onClose: () => void; role: Role
   const [sent, setSent] = useState(false)
 
   const [reportNumber, setReportNumber] = useState("")
+  const [reportId, setReportId] = useState<number | null>(null)
+  const [evidence, setEvidence] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState("")
 
   const [error, setError] = useState("")
 
@@ -708,9 +763,14 @@ export function ReportModal({ onClose, role }: { onClose: () => void; role: Role
     setSaving(true)
 
     try {
-      setReportNumber(await createReport(form))
-
+      const createdNumber = await createReport(form)
+      setReportNumber(createdNumber)
       setSent(true)
+      window.dispatchEvent(new Event("biomedgest:reports-changed"))
+      if (isOperationalCompletionEnabled) {
+        try { setReportId(await getReportIdByNumber(createdNumber)) }
+        catch { setUploadError("El reporte se guardó, pero no fue posible habilitar su evidencia en esta sesión.") }
+      }
     } catch (reportError) {
       setError(
         reportError instanceof Error
@@ -734,6 +794,8 @@ export function ReportModal({ onClose, role }: { onClose: () => void; role: Role
             El folio <strong>{reportNumber}</strong> fue enviado a Ingeniería
             Clínica. Te notificaremos cada avance.
           </p>
+          {isOperationalCompletionEnabled && reportId && <div className="attachment-panel"><strong>Evidencia opcional</strong><input aria-label="Evidencia del reporte" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.txt,.doc,.docx" onChange={(event) => setEvidence(event.target.files?.[0] || null)} /><button type="button" className="row-action" disabled={!evidence || uploading} onClick={async () => { if (!evidence) return; setUploading(true); setUploadError(""); try { await uploadPrivateAttachment(evidence, { reportId }, "Evidencia adjunta al reporte"); setEvidence(null) } catch (cause) { setUploadError(cause instanceof Error ? cause.message : "No fue posible subir la evidencia.") } finally { setUploading(false) } }}><Upload size={15} />{uploading ? "Subiendo..." : "Subir evidencia"}</button>{uploadError && <small className="form-error">{uploadError}</small>}</div>}
+          {isOperationalCompletionEnabled && !reportId && uploadError && <small className="form-error">{uploadError}</small>}
           <Button onClick={onClose}>Entendido</Button>
         </div>
       </div>
@@ -987,14 +1049,49 @@ export default function App() {
   const [loadingSession, setLoadingSession] = useState(true)
 
   useEffect(() => {
-    getCurrentProfile()
+    let mounted = true
+    const refreshProfile = () => {
+      getCurrentProfile()
+        .then((currentProfile) => {
+          if (mounted) setProfile(currentProfile)
+        })
+        .catch(() => {
+          if (mounted) setProfile(null)
+        })
+        .finally(() => {
+          if (mounted) setLoadingSession(false)
+        })
+    }
 
-      .then((currentProfile) => setProfile(currentProfile))
+    refreshProfile()
+    const authSubscription = supabase?.auth.onAuthStateChange((event) => {
+      if (!mounted) return
+      if (event === "SIGNED_OUT") {
+        setProfile(null)
+        setLoadingSession(false)
+        return
+      }
+      if (["SIGNED_IN", "TOKEN_REFRESHED", "USER_UPDATED", "INITIAL_SESSION"].includes(event)) {
+        window.setTimeout(refreshProfile, 0)
+      }
+    })
+    window.addEventListener("focus", refreshProfile)
 
-      .catch(() => setProfile(null))
-
-      .finally(() => setLoadingSession(false))
+    return () => {
+      mounted = false
+      window.removeEventListener("focus", refreshProfile)
+      authSubscription?.data.subscription.unsubscribe()
+    }
   }, [])
+
+  useEffect(() => {
+    if (!profile) return
+    const equipmentId = new URLSearchParams(window.location.search).get("equipment")
+    if (equipmentId) {
+      setSelectedEquipmentId(equipmentId)
+      setView("equipo")
+    }
+  }, [profile])
 
   const title = useMemo(
     () =>
@@ -1026,6 +1123,10 @@ export default function App() {
         trazabilidad: "Trazabilidad",
 
         documentos: "Documentos",
+        capacitaciones: "Capacitaciones",
+        notificaciones: "Notificaciones",
+        configuracion: "Configuración institucional",
+        perfil: "Mi perfil",
       })[view],
     [role, view],
   )
@@ -1053,6 +1154,7 @@ export default function App() {
           void supabase?.auth.signOut()
           setProfile(null)
         }}
+        onProfile={() => setView("perfil")}
       />
       <div className="app-main">
         <AppHeader profile={profile} title={title} />
@@ -1065,6 +1167,9 @@ export default function App() {
               role={role}
               onSelectEquipment={(equipmentId) => {
                 setSelectedEquipmentId(equipmentId)
+                const url = new URL(window.location.href)
+                url.searchParams.set("equipment", equipmentId)
+                window.history.replaceState({}, "", url)
                 setView("equipo")
               }}
             />
@@ -1073,12 +1178,21 @@ export default function App() {
             <EquipmentDetail
               equipmentId={selectedEquipmentId}
               role={role}
-              onBack={() => setView("inventario")}
+              onBack={() => {
+                const url = new URL(window.location.href)
+                url.searchParams.delete("equipment")
+                window.history.replaceState({}, "", url)
+                setView("inventario")
+              }}
             />
           )}
           {view === "orden" && <ServiceOrdersView role={role} />}
           {view === "calendario" && <MaintenanceView role={role} />}
           {view === "avisos" && <NoticesView />}
+          {view === "capacitaciones" && <TrainingCalendar role={role} />}
+          {view === "notificaciones" && <NotificationsView />}
+          {view === "configuracion" && role === "jefe" && <InstitutionSettingsView />}
+          {view === "perfil" && <ProfileView profile={profile} onUpdated={setProfile} />}
           {view === "cotizaciones" && <QuotationsView />}
           {view === "usuarios" && <UserPermissionsView />}
           {view === "trazabilidad" && <AuditView />}
@@ -1094,6 +1208,7 @@ export default function App() {
       </div>
       <BottomNav role={role} view={view} setView={setView} />
       {reportOpen && <ReportModal role={role} onClose={() => setReportOpen(false)} />}
+      {profile.must_change_password && <PasswordChangeGate onCompleted={setProfile} />}
     </div>
   )
 }

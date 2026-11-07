@@ -3,10 +3,26 @@ import { useEffect, useState } from "react"
 import { CalendarDays, CheckCircle2, GraduationCap, Plus } from "lucide-react"
 
 import { Button, PageIntro } from "./ui"
+import { PrivateAttachmentPanel } from "./PrivateAttachmentPanel"
 
-import { createTraining, listTrainings, type Training } from "../lib/supabase"
+import {
+  createTraining,
+  isBusinessCompletionEnabled,
+  listActiveProfileDirectory,
+  listEquipmentInventory,
+  listTrainingParticipants,
+  listTrainings,
+  setTrainingParticipants,
+  updateTrainingAttendance,
+  updateTrainingStatus,
+  type Profile,
+  type Role,
+  type Training,
+  type TrainingParticipant,
+  type EquipmentInventoryDetail,
+} from "../lib/supabase"
 
-export function TrainingCalendar() {
+export function TrainingCalendar({ role }: { role: Role }) {
   const [trainings, setTrainings] = useState<Training[]>([])
 
   const [showForm, setShowForm] = useState(false)
@@ -77,10 +93,11 @@ export function TrainingCalendar() {
                     {training.location || "Por definir"}
                   </small>
                   <span>
-                    {training.purposeLabel} · Recurrencia {training.recurrence}
+                    {training.purposeLabel} · Recurrencia {training.recurrence} · Estado {training.status}
                   </span>
                 </div>
                 <CheckCircle2 size={18} />
+                {isBusinessCompletionEnabled && (role === "jefe" || role === "tecnico") && <TrainingAdminPanel training={training} onChanged={(updated) => setTrainings((current) => current.map((item) => item.id === updated.id ? { ...item, ...updated } : item))} />}
               </article>
             ))}
           </div>
@@ -88,6 +105,31 @@ export function TrainingCalendar() {
       </section>
     </>
   )
+}
+
+function TrainingAdminPanel({ training, onChanged }: { training: Training; onChanged: (training: Training) => void }) {
+  const [open, setOpen] = useState(false)
+  const [profiles, setProfiles] = useState<Profile[]>([])
+  const [participants, setParticipants] = useState<TrainingParticipant[]>([])
+  const [selected, setSelected] = useState<string[]>([])
+  const [error, setError] = useState("")
+
+  async function load() {
+    setError("")
+    try {
+      const [profileRows, participantRows] = await Promise.all([listActiveProfileDirectory(), listTrainingParticipants(training.id)])
+      setProfiles(profileRows.filter((profile) => profile.active))
+      setParticipants(participantRows)
+      setSelected(participantRows.map((row) => row.participant_id))
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "No fue posible cargar participantes.") }
+  }
+
+  async function toggle() { const next = !open; setOpen(next); if (next) await load() }
+  async function saveParticipants() { try { await setTrainingParticipants(training.id, selected); await load() } catch (cause) { setError(cause instanceof Error ? cause.message : "No fue posible guardar participantes.") } }
+  async function attendance(row: TrainingParticipant, status: TrainingParticipant["attendance_status"]) { try { await updateTrainingAttendance(training.id, row.participant_id, status); await load() } catch (cause) { setError(cause instanceof Error ? cause.message : "No fue posible registrar asistencia.") } }
+  async function transition(status: Training["status"]) { try { onChanged(await updateTrainingStatus(training.id, status)) } catch (cause) { setError(cause instanceof Error ? cause.message : "No fue posible cambiar el estado.") } }
+
+  return <div className="training-admin"><button type="button" className="row-action" onClick={toggle}>{open ? "Cerrar gestión" : "Gestionar"}</button>{open && <div className="training-admin-panel"><label className="field"><span>Participantes activos</span><select multiple value={selected} onChange={(event) => setSelected(Array.from(event.target.selectedOptions, (option) => option.value))}>{profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.full_name} · {profile.role}</option>)}</select></label><button type="button" className="row-action" onClick={saveParticipants}>Guardar participantes</button><div className="participant-list">{participants.map((row) => <label key={row.participant_id}><span>{row.profile?.full_name || row.participant_id}</span><select value={row.attendance_status} onChange={(event) => attendance(row, event.target.value as TrainingParticipant["attendance_status"])}><option value="convocado">Convocado</option><option value="confirmado">Confirmado</option><option value="asistio">Asistió</option><option value="no_asistio">No asistió</option></select></label>)}</div><div className="qr-actions">{training.status === "programada" && <><button type="button" className="row-action" onClick={() => transition("en_curso")}>Iniciar</button><button type="button" className="row-action" onClick={() => transition("cancelada")}>Cancelar</button></>}{training.status === "en_curso" && <button type="button" className="row-action" onClick={() => transition("completada")}>Completar</button>}</div><PrivateAttachmentPanel relation={{ trainingId: training.id }} title="Evidencias de capacitación" />{error && <small className="form-error">{error}</small>}</div>}</div>
 }
 
 export function TrainingForm({
@@ -108,8 +150,12 @@ export function TrainingForm({
   const [location, setLocation] = useState("")
 
   const [description, setDescription] = useState("")
+  const [equipmentId, setEquipmentId] = useState("")
+  const [equipment, setEquipment] = useState<EquipmentInventoryDetail[]>([])
 
   const [error, setError] = useState("")
+
+  useEffect(() => { if (isBusinessCompletionEnabled) listEquipmentInventory("tecnico").then(setEquipment).catch(() => setEquipment([])) }, [])
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -123,6 +169,7 @@ export function TrainingForm({
           scheduledAt,
           location,
           description,
+          equipmentId,
         }),
       )
     } catch (cause) {
@@ -198,6 +245,7 @@ export function TrainingForm({
             onChange={(event) => setDescription(event.target.value)}
           />
         </label>
+        {isBusinessCompletionEnabled && <label className="field span-2"><span>Equipo relacionado</span><select value={equipmentId} onChange={(event) => setEquipmentId(event.target.value)}><option value="">Sin equipo específico</option>{equipment.map((row) => <option key={row.id} value={row.id}>{row.inventory_code} · {row.equipment_type}</option>)}</select></label>}
       </div>
       {error && <p className="form-error">{error}</p>}
       <div className="form-footer">

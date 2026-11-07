@@ -1,0 +1,5 @@
+[functions.admin-users]
+verify_jwt = true
+
+[functions.storage-admin]
+verify_jwt = true

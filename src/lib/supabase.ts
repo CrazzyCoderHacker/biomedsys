@@ -12,6 +12,9 @@ export type Profile = {
   role: Role
 
   department: string | null
+
+  active: boolean
+  must_change_password?: boolean
 }
 
 export type Training = {
@@ -32,6 +35,16 @@ export type Training = {
   location: string | null
 
   description: string | null
+  status: "programada" | "en_curso" | "completada" | "cancelada"
+  instructor_id: string
+  equipment_id?: string | null
+}
+
+export type TrainingParticipant = {
+  training_id: number
+  participant_id: string
+  attendance_status: "convocado" | "confirmado" | "asistio" | "no_asistio"
+  profile?: Pick<Profile, "full_name" | "institutional_id" | "role">
 }
 
 export type AuditEntry = {
@@ -46,6 +59,13 @@ export type AuditEntry = {
   created_at: string
 }
 
+export type ProfileChange = {
+  id: number; profile_id: string; changed_by: string; previous_role: Role; new_role: Role;
+  previous_active: boolean; new_active: boolean; reason: string; changed_at: string
+}
+
+export type AccessRequest = { id: number; institutional_id: string; full_name: string; role: Role; department: string | null; status: string; created_at: string }
+
 export type Quote = {
   id: number
   quote_number: string
@@ -56,7 +76,11 @@ export type Quote = {
   status: string
   notes: string | null
   created_at: string
+  equipment_id?: string | null
+  maintenance_id?: number | null
 }
+
+export type QuoteItem = { id?: number; quote_id?: number; description: string; quantity: number; unit_cost: number; line_total?: number }
 
 export type EquipmentStatus = "operativo" | "en_reparacion" | "fuera_de_servicio" | "baja" | "desconocido"
 
@@ -263,6 +287,87 @@ export type MaintenanceSummary = {
   priority: "critica" | "alta" | "ordinaria" | null
 
   completed_at: string | null
+
+  source_report_id: number | null
+
+  validated_by: string | null
+
+  validated_at: string | null
+
+  closure_notes: string | null
+
+  assigned_to_name?: string | null
+
+  equipment?: EquipmentInventoryDetail | null
+
+  report_number?: string | null
+
+  report_status?: string | null
+
+  record?: MaintenanceRecord | null
+
+  activities?: MaintenanceActivity[]
+
+  attachments?: FileAttachment[]
+}
+
+export type MaintenanceRecord = {
+  id: number
+  maintenance_id: number
+  performed_by: string
+  started_at: string | null
+  completed_at: string | null
+  diagnosis: string | null
+  work_performed: string | null
+  test_results: string | null
+  equipment_condition: "operativo" | "en_reparacion" | "fuera_de_servicio" | null
+  technical_notes: string | null
+  updated_at: string
+}
+
+export type MaintenanceActivity = {
+  id: number
+  maintenance_id: number
+  activity: string
+  completed: boolean
+  notes: string | null
+}
+
+export type FileAttachment = {
+  id: string
+  bucket: string
+  storage_path: string
+  original_name: string
+  mime_type: string
+  size_bytes: number
+  uploaded_by: string
+  equipment_id: string | null
+  report_id: number | null
+  maintenance_id: number | null
+  training_id: number | null
+  quote_id: number | null
+  description: string | null
+  created_at: string
+}
+
+export type Notification = {
+  id: number
+  event_type: string
+  title: string
+  message: string
+  entity_type: string | null
+  entity_id: string | null
+  read_at: string | null
+  created_at: string
+}
+
+export type InstitutionSettings = {
+  id: number
+  institution_name: string
+  timezone: string
+  default_currency: string
+  preventive_warning_days: number
+  updated_at: string
 }
 
 export type MaintenanceCatalogItem = {
@@ -310,6 +415,12 @@ export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey)
 export const isInventoryAdministrationEnabled =
   import.meta.env.VITE_INVENTORY_ADMIN_ENABLED === "true"
 
+export const isOperationalCompletionEnabled =
+  import.meta.env.VITE_OPERATIONAL_COMPLETION_ENABLED === "true"
+
+export const isBusinessCompletionEnabled =
+  import.meta.env.VITE_BUSINESS_COMPLETION_ENABLED === "true"
+
 export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null
@@ -338,23 +449,30 @@ export async function signInWithInstitutionalId(
 
   if (authError) throw authError
 
-  const { data: profile, error: profileError } = await supabase
+  const profile = await loadActiveProfile(authData.user.id)
 
-    .from("profiles")
-
-    .select("id, institutional_id, full_name, role, department")
-
-    .eq("id", authData.user.id)
-
-    .single<Profile>()
-
-  if (profileError) {
-    await supabase.auth.signOut()
-
-    throw profileError
+  if (!profile) {
+    await supabase.auth.signOut({ scope: "local" })
+    throw new Error("Tu perfil está inactivo o no está autorizado para usar BioMedGest.")
   }
 
   return profile
+}
+
+export async function loadActiveProfile(
+  userId: string,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient
+    .from("profiles")
+    .select("id, institutional_id, full_name, role, department, active, must_change_password")
+    .eq("id", userId)
+    .eq("active", true)
+    .maybeSingle<Profile>()
+
+  if (error) throw error
+  return data
 }
 
 export async function getCurrentProfile() {
@@ -364,19 +482,12 @@ export async function getCurrentProfile() {
 
   if (!sessionData.session) return null
 
-  const { data, error } = await supabase
-
-    .from("profiles")
-
-    .select("id, institutional_id, full_name, role, department")
-
-    .eq("id", sessionData.session.user.id)
-
-    .single<Profile>()
-
-  if (error) throw error
-
-  return data
+  const profile = await loadActiveProfile(sessionData.session.user.id)
+  if (!profile) {
+    await supabase.auth.signOut({ scope: "local" })
+    return null
+  }
+  return profile
 }
 
 export type CreateReportInput = {
@@ -450,7 +561,15 @@ export async function createReport(
 }
 
 export type ReportSummary = {
+  id: number
+
   report_number: string
+
+  reporter_id: string
+
+  equipment_id: string | null
+
+  maintenance_id: number | null
 
   equipment_identifier: string
 
@@ -463,20 +582,32 @@ export type ReportSummary = {
   status: string
 
   created_at: string
+
+  event_date: string
+
+  event_type: string
+
+  location: string | null
+
+  manufacturer: string | null
+
+  model_serial: string | null
+
+  patient_outcome: string | null
+
+  action_taken: string | null
 }
 
-export async function listReports() {
-  if (!supabase) {
-    throw new Error("Supabase no está configurado.")
-  }
+const reportSummarySelection =
+  "id, report_number, reporter_id, equipment_id, maintenance_id, equipment_identifier, description, service, priority, status, created_at, event_date, event_type, location, manufacturer, model_serial, patient_outcome, action_taken"
 
-  const { data, error } = await supabase
+export async function listReports(client: SupabaseClient | null = supabase) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient
 
     .from("reports")
 
-    .select(
-      "report_number, equipment_identifier, description, service, priority, status, created_at",
-    )
+    .select(reportSummarySelection)
 
     .order("created_at", { ascending: false })
 
@@ -495,10 +626,45 @@ export async function updateReportWorkflow(
     .from("reports")
     .update(changes)
     .eq("report_number", reportNumber)
-    .select("report_number, equipment_identifier, description, service, priority, status, created_at")
+    .select(reportSummarySelection)
     .single<ReportSummary>()
   if (error) throw error
   return data
+}
+
+export async function listActiveTechnicians(
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient
+    .from("profiles")
+    .select("id, institutional_id, full_name, role, department, active, must_change_password")
+    .eq("role", "tecnico")
+    .eq("active", true)
+    .order("full_name")
+  if (error) throw error
+  return (data || []) as Profile[]
+}
+
+export async function createCorrectiveOrderFromReport(
+  reportId: number,
+  assignedTo: string,
+  priority: "critica" | "alta" | "ordinaria",
+  scheduledAt: string,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc(
+    "create_corrective_order_from_report",
+    {
+      target_report_id: reportId,
+      target_assigned_to: assignedTo,
+      target_priority: priority,
+      target_scheduled_at: scheduledAt,
+    },
+  )
+  if (error) throw error
+  return data as MaintenanceSummary
 }
 
 export async function loadDashboardData(role: Role): Promise<DashboardData> {
@@ -509,7 +675,7 @@ export async function loadDashboardData(role: Role): Promise<DashboardData> {
     .from("reports")
 
     .select(
-      "report_number, equipment_identifier, description, service, priority, status, created_at",
+      reportSummarySelection,
     )
 
     .order("created_at", { ascending: false })
@@ -547,10 +713,25 @@ export async function loadDashboardData(role: Role): Promise<DashboardData> {
   }
 }
 
-export async function listMaintenanceOverview() {
-  const configuredClient = requireSupabase()
+export async function listMaintenanceOverview(
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
 
-  const [catalogResult, maintenanceResult] = await Promise.all([
+  const activityQuery = isOperationalCompletionEnabled
+    ? configuredClient
+        .from("maintenance_activities")
+        .select("id, maintenance_id, activity, completed, notes")
+    : Promise.resolve({ data: [] as MaintenanceActivity[], error: null })
+
+  const attachmentQuery = isOperationalCompletionEnabled
+    ? configuredClient
+        .from("file_attachments")
+        .select("id, bucket, storage_path, original_name, mime_type, size_bytes, uploaded_by, equipment_id, report_id, maintenance_id, training_id, quote_id, description, created_at")
+        .not("maintenance_id", "is", null)
+    : Promise.resolve({ data: [] as FileAttachment[], error: null })
+
+  const [catalogResult, maintenanceResult, recordResult, reportResult, profileResult, equipmentResult, activityResult, attachmentResult] = await Promise.all([
     configuredClient
 
       .from("maintenance_catalog")
@@ -564,21 +745,135 @@ export async function listMaintenanceOverview() {
       .from("maintenances")
 
       .select(
-        "id, maintenance_number, maintenance_code, equipment_identifier, equipment_id, status, scheduled_at, assigned_to, priority, completed_at",
+        "id, maintenance_number, maintenance_code, equipment_identifier, equipment_id, status, scheduled_at, assigned_to, priority, completed_at, source_report_id, validated_by, validated_at, closure_notes",
       )
 
       .order("scheduled_at", { ascending: true }),
+
+    configuredClient
+      .from("maintenance_records")
+      .select("id, maintenance_id, performed_by, started_at, completed_at, diagnosis, work_performed, test_results, equipment_condition, technical_notes, updated_at"),
+
+    configuredClient
+      .from("reports")
+      .select("id, report_number, maintenance_id, status"),
+
+    configuredClient
+      .from("profiles")
+      .select("id, full_name")
+      .eq("active", true),
+
+    configuredClient
+      .from("equipment_inventory_detail")
+      .select("id, inventory_code, equipment_type, manufacturer, model, serial_number, manufacture_year, acquisition_year, hospital_area, location, custodian_location_text, status, requires_review, current_risk_score, current_risk_category"),
+
+    activityQuery,
+
+    attachmentQuery,
   ])
 
   if (catalogResult.error) throw catalogResult.error
 
   if (maintenanceResult.error) throw maintenanceResult.error
 
+  if (recordResult.error) throw recordResult.error
+
+  if (reportResult.error) throw reportResult.error
+
+  if (profileResult.error) throw profileResult.error
+
+  if (equipmentResult.error) throw equipmentResult.error
+
+  if (activityResult.error) throw activityResult.error
+
+  if (attachmentResult.error) throw attachmentResult.error
+
+  const records = new Map(
+    ((recordResult.data || []) as MaintenanceRecord[]).map((record) => [record.maintenance_id, record]),
+  )
+  const reports = new Map(
+    (reportResult.data || []).map((report) => [report.maintenance_id as number, report]),
+  )
+  const profiles = new Map(
+    (profileResult.data || []).map((profile) => [profile.id, profile.full_name]),
+  )
+  const equipment = new Map(
+    ((equipmentResult.data || []) as EquipmentInventoryDetail[]).map((item) => [item.id, item]),
+  )
+  const activities = new Map<number, MaintenanceActivity[]>()
+  for (const activity of (activityResult.data || []) as MaintenanceActivity[]) {
+    activities.set(activity.maintenance_id, [...(activities.get(activity.maintenance_id) || []), activity])
+  }
+  const attachments = new Map<number, FileAttachment[]>()
+  for (const attachment of (attachmentResult.data || []) as FileAttachment[]) {
+    if (attachment.maintenance_id)
+      attachments.set(attachment.maintenance_id, [...(attachments.get(attachment.maintenance_id) || []), attachment])
+  }
+
   return {
     catalog: (catalogResult.data || []) as MaintenanceCatalogItem[],
 
-    maintenances: (maintenanceResult.data || []) as MaintenanceSummary[],
+    maintenances: (maintenanceResult.data || []).map((maintenance) => {
+      const report = reports.get(maintenance.id)
+      return {
+        ...maintenance,
+        record: records.get(maintenance.id) || null,
+        report_number: report?.report_number || null,
+        report_status: report?.status || null,
+        assigned_to_name: maintenance.assigned_to ? profiles.get(maintenance.assigned_to) || null : null,
+        equipment: maintenance.equipment_id ? equipment.get(maintenance.equipment_id) || null : null,
+        activities: activities.get(maintenance.id) || [],
+        attachments: attachments.get(maintenance.id) || [],
+      } as MaintenanceSummary
+    }),
   }
+}
+
+export type SaveCorrectiveInterventionInput = {
+  startedAt: string
+  completedAt: string | null
+  diagnosis: string
+  workPerformed: string
+  testResults: string
+  equipmentCondition: MaintenanceRecord["equipment_condition"]
+  technicalNotes: string
+}
+
+export async function saveCorrectiveIntervention(
+  maintenanceId: number,
+  input: SaveCorrectiveInterventionInput,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc(
+    "save_corrective_intervention",
+    {
+      target_maintenance_id: maintenanceId,
+      new_started_at: input.startedAt,
+      new_completed_at: input.completedAt,
+      new_diagnosis: input.diagnosis,
+      new_work_performed: input.workPerformed,
+      new_test_results: input.testResults,
+      new_equipment_condition: input.equipmentCondition,
+      new_technical_notes: input.technicalNotes,
+    },
+  )
+  if (error) throw error
+  return data as MaintenanceRecord
+}
+
+export async function validateCorrectiveClosure(
+  maintenanceId: number,
+  notes: string,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc(
+    "validate_corrective_closure",
+    { target_maintenance_id: maintenanceId, validation_notes: notes },
+  )
+  if (error) throw error
+  return data as MaintenanceSummary
 }
 
 export async function updateAssignedMaintenanceStatus(
@@ -637,7 +932,7 @@ export async function listTrainings() {
   const { data, error } = await supabase
     .from("trainings")
     .select(
-      "id, training_number, title, purpose, recurrence, scheduled_at, location, description",
+      `id, training_number, title, purpose, recurrence, scheduled_at, location, description, status, instructor_id${isBusinessCompletionEnabled ? ", equipment_id" : ""}`,
     )
     .order("scheduled_at")
 
@@ -650,7 +945,8 @@ export async function listTrainings() {
     protocolo: "Protocolo",
   }
 
-  return (data || []).map((training) => ({
+  const trainingRows = (data || []) as unknown as Array<Omit<Training, "purposeLabel">>
+  return trainingRows.map((training) => ({
     ...training,
     purposeLabel: labels[training.purpose] || training.purpose,
   })) as Training[]
@@ -663,6 +959,7 @@ export async function createTraining(input: {
   scheduledAt: string
   location: string
   description: string
+  equipmentId?: string
 }) {
   if (!supabase) throw new Error("Supabase no está configurado.")
 
@@ -685,10 +982,12 @@ export async function createTraining(input: {
 
       description: input.description || null,
 
+      ...(isBusinessCompletionEnabled ? { equipment_id: input.equipmentId || null } : {}),
+
       instructor_id: session.session.user.id,
     })
     .select(
-      "id, training_number, title, purpose, recurrence, scheduled_at, location, description",
+      `id, training_number, title, purpose, recurrence, scheduled_at, location, description, status, instructor_id${isBusinessCompletionEnabled ? ", equipment_id" : ""}`,
     )
     .single()
 
@@ -701,9 +1000,10 @@ export async function createTraining(input: {
     protocolo: "Protocolo",
   }
 
+  const training = data as unknown as Omit<Training, "purposeLabel">
   return {
-    ...data,
-    purposeLabel: labels[data.purpose] || data.purpose,
+    ...training,
+    purposeLabel: labels[training.purpose] || training.purpose,
   } as Training
 }
 
@@ -712,8 +1012,7 @@ export async function listProfiles() {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, institutional_id, full_name, role, department")
-    .eq("active", true)
+    .select("id, institutional_id, full_name, role, department, active, must_change_password")
     .order("institutional_id")
 
   if (error) throw error
@@ -735,13 +1034,22 @@ export async function listAuditLog() {
   return (data || []) as AuditEntry[]
 }
 
+export async function listProfileChangeHistory(client: SupabaseClient | null = supabase) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.from("profile_change_history")
+    .select("id, profile_id, changed_by, previous_role, new_role, previous_active, new_active, reason, changed_at")
+    .order("changed_at", { ascending: false }).limit(100)
+  if (error) throw error
+  return (data || []) as ProfileChange[]
+}
+
 export async function listQuotes() {
   if (!supabase) throw new Error("Supabase no está configurado.")
 
   const { data, error } = await supabase
     .from("quotes")
     .select(
-      "id, quote_number, supplier, equipment_description, amount, currency, status, notes, created_at",
+      "id, quote_number, supplier, equipment_description, amount, currency, status, notes, created_at, equipment_id, maintenance_id",
     )
     .order("created_at", { ascending: false })
 
@@ -767,12 +1075,92 @@ export async function createQuote(input: {
       notes: input.notes || null,
     })
     .select(
-      "id, quote_number, supplier, equipment_description, amount, currency, status, notes, created_at",
+      "id, quote_number, supplier, equipment_description, amount, currency, status, notes, created_at, equipment_id, maintenance_id",
     )
     .single()
 
   if (error) throw error
 
+  return data as Quote
+}
+
+export async function listTrainingParticipants(
+  trainingId: number,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient
+    .from("training_participants")
+    .select("training_id, participant_id, attendance_status, profile:profiles!training_participants_participant_id_fkey(full_name, institutional_id, role)")
+    .eq("training_id", trainingId)
+    .order("participant_id")
+  if (error) throw error
+  return (data || []).map((row) => ({ ...row, profile: Array.isArray(row.profile) ? row.profile[0] : row.profile })) as TrainingParticipant[]
+}
+
+export async function setTrainingParticipants(
+  trainingId: number,
+  participantIds: string[],
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc("set_training_participants", { target_training_id: trainingId, participant_ids: participantIds })
+  if (error) throw error
+  return (data || []) as TrainingParticipant[]
+}
+
+export async function listActiveProfileDirectory(client: SupabaseClient | null = supabase) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc("list_active_profile_directory")
+  if (error) throw error
+  return (data || []) as Profile[]
+}
+
+export async function updateTrainingAttendance(
+  trainingId: number,
+  participantId: string,
+  status: TrainingParticipant["attendance_status"],
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc("update_training_participant_attendance", { target_training_id: trainingId, target_participant_id: participantId, new_status: status })
+  if (error) throw error
+  return data as TrainingParticipant
+}
+
+export async function updateTrainingStatus(
+  trainingId: number,
+  status: Training["status"],
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc("update_training_status", { target_training_id: trainingId, new_status: status })
+  if (error) throw error
+  return data as Training
+}
+
+export async function listQuoteItems(quoteId: number, client: SupabaseClient | null = supabase) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.from("quote_items").select("id, quote_id, description, quantity, unit_cost, line_total").eq("quote_id", quoteId).order("id")
+  if (error) throw error
+  return (data || []) as QuoteItem[]
+}
+
+export async function saveQuoteItems(
+  quoteId: number,
+  status: Quote["status"],
+  items: QuoteItem[],
+  relation: { equipmentId?: string | null; maintenanceId?: number | null } = {},
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc("save_quote_items", {
+    target_quote_id: quoteId, new_status: status,
+    items: items.map(({ description, quantity, unit_cost }) => ({ description, quantity, unit_cost })),
+    target_equipment_id: relation.equipmentId || null,
+    target_maintenance_id: relation.maintenanceId || null,
+  })
+  if (error) throw error
   return data as Quote
 }
 
@@ -794,6 +1182,15 @@ export async function createAccessRequest(input: {
     })
 
   if (error) throw error
+}
+
+export async function listAccessRequests(client: SupabaseClient | null = supabase) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.from("user_access_requests")
+    .select("id, institutional_id, full_name, role, department, status, created_at")
+    .order("created_at", { ascending: false })
+  if (error) throw error
+  return (data || []) as AccessRequest[]
 }
 
 function requireSupabase(client: SupabaseClient | null = supabase) {
@@ -1089,8 +1486,9 @@ export async function getInventoryAdministrationData(
       .order("reviewed_at", { ascending: false }),
     configuredClient
       .from("profiles")
-      .select("id, institutional_id, full_name, role, department")
+      .select("id, institutional_id, full_name, role, department, active, must_change_password")
       .eq("role", "tecnico")
+      .eq("active", true)
       .order("full_name"),
   ])
 
@@ -1189,4 +1587,311 @@ export async function reviewInventoryIssue(
   })
   if (error) throw error
   return data as InventoryIssue
+}
+
+export type PreventiveActivityInput = {
+  activity: string
+  completed: boolean
+  notes: string
+}
+
+export async function savePreventiveIntervention(
+  maintenanceId: number,
+  input: SaveCorrectiveInterventionInput & { activities: PreventiveActivityInput[] },
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc("save_preventive_intervention", {
+    target_maintenance_id: maintenanceId,
+    new_started_at: input.startedAt,
+    new_completed_at: input.completedAt,
+    new_diagnosis: input.diagnosis,
+    new_work_performed: input.workPerformed,
+    new_test_results: input.testResults,
+    new_equipment_condition: input.equipmentCondition,
+    new_technical_notes: input.technicalNotes,
+    new_activities: input.activities,
+  })
+  if (error) throw error
+  return data as MaintenanceRecord
+}
+
+export async function validatePreventiveClosure(
+  maintenanceId: number,
+  notes: string,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc("validate_preventive_closure", {
+    target_maintenance_id: maintenanceId,
+    validation_notes: notes,
+  })
+  if (error) throw error
+  return data as MaintenanceSummary
+}
+
+export async function listNotifications(
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { error: refreshError } = await configuredClient.rpc("refresh_my_preventive_notifications")
+  if (refreshError) throw refreshError
+  const { data, error } = await configuredClient
+    .from("notifications")
+    .select("id, event_type, title, message, entity_type, entity_id, read_at, created_at")
+    .order("created_at", { ascending: false })
+    .limit(100)
+  if (error) throw error
+  return (data || []) as Notification[]
+}
+
+export async function markNotificationRead(
+  notificationId: number,
+  read = true,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc("mark_notification_read", {
+    target_notification_id: notificationId,
+    mark_read: read,
+  })
+  if (error) throw error
+  return data as Notification
+}
+
+export async function manageProfile(
+  profile: Profile,
+  reason: string,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc("manage_profile", {
+    target_profile_id: profile.id,
+    new_full_name: profile.full_name,
+    new_department: profile.department,
+    new_role: profile.role,
+    new_active: profile.active,
+    change_reason: reason,
+  })
+  if (error) throw error
+  return data as Profile
+}
+
+export async function updateOwnProfile(
+  fullName: string,
+  department: string,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc("update_own_profile", {
+    new_full_name: fullName,
+    new_department: department,
+  })
+  if (error) throw error
+  return data as Profile
+}
+
+export async function getInstitutionSettings(
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient
+    .from("institution_settings")
+    .select("id, institution_name, timezone, default_currency, preventive_warning_days, updated_at")
+    .single()
+  if (error) throw error
+  return data as InstitutionSettings
+}
+
+export async function updateInstitutionSettings(
+  settings: InstitutionSettings,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc("update_institution_settings", {
+    new_institution_name: settings.institution_name,
+    new_timezone: settings.timezone,
+    new_default_currency: settings.default_currency,
+    new_preventive_warning_days: settings.preventive_warning_days,
+  })
+  if (error) throw error
+  return data as InstitutionSettings
+}
+
+export type AttachmentRelation =
+  | { equipmentId: string }
+  | { reportId: number }
+  | { maintenanceId: number }
+  | { trainingId: number }
+  | { quoteId: number }
+
+const allowedAttachmentTypes = new Set([
+  "application/pdf", "image/jpeg", "image/png", "image/webp", "text/plain",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+])
+
+export async function listPrivateAttachments(
+  relation: AttachmentRelation,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const relationEntry = Object.entries(relation)[0]
+  const column = `${relationEntry[0].replace(/Id$/, "")}_id`
+  const { data, error } = await configuredClient
+    .from("file_attachments")
+    .select("id, bucket, storage_path, original_name, mime_type, size_bytes, uploaded_by, equipment_id, report_id, maintenance_id, training_id, quote_id, description, created_at")
+    .eq(column, relationEntry[1])
+    .order("created_at", { ascending: false })
+  if (error) throw error
+  return (data || []) as FileAttachment[]
+}
+
+export async function getReportIdByNumber(
+  reportNumber: string,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.from("reports").select("id").eq("report_number", reportNumber).single()
+  if (error) throw error
+  return Number(data.id)
+}
+
+export async function uploadPrivateAttachment(
+  file: File,
+  relation: AttachmentRelation,
+  description: string,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  if (!allowedAttachmentTypes.has(file.type)) throw new Error("Tipo de archivo no permitido.")
+  if (file.size <= 0 || file.size > 10 * 1024 * 1024) throw new Error("El archivo debe medir entre 1 byte y 10 MB.")
+  const { data: sessionResult } = await configuredClient.auth.getSession()
+  const userId = sessionResult.session?.user.id
+  if (!userId) throw new Error("La sesión expiró.")
+  const relationEntry = Object.entries(relation)[0]
+  const relationName = relationEntry[0].replace(/Id$/, "")
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-120)
+  const storagePath = `${userId}/${relationName}/${relationEntry[1]}/${crypto.randomUUID()}-${safeName}`
+  const { error: uploadError } = await configuredClient.storage
+    .from("biomedgest-private")
+    .upload(storagePath, file, { contentType: file.type, upsert: false })
+  if (uploadError) throw uploadError
+
+  const relationColumns = {
+    equipment_id: "equipmentId" in relation ? relation.equipmentId : null,
+    report_id: "reportId" in relation ? relation.reportId : null,
+    maintenance_id: "maintenanceId" in relation ? relation.maintenanceId : null,
+    training_id: "trainingId" in relation ? relation.trainingId : null,
+    quote_id: "quoteId" in relation ? relation.quoteId : null,
+  }
+  const { data, error } = await configuredClient
+    .from("file_attachments")
+    .insert({
+      bucket: "biomedgest-private",
+      storage_path: storagePath,
+      original_name: file.name,
+      mime_type: file.type,
+      size_bytes: file.size,
+      description: description || null,
+      ...relationColumns,
+    })
+    .select("id, bucket, storage_path, original_name, mime_type, size_bytes, uploaded_by, equipment_id, report_id, maintenance_id, training_id, quote_id, description, created_at")
+    .single()
+  if (error) {
+    await configuredClient.storage.from("biomedgest-private").remove([storagePath])
+    throw error
+  }
+  return data as FileAttachment
+}
+
+export async function createAttachmentDownloadUrl(
+  attachment: FileAttachment,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.storage
+    .from(attachment.bucket)
+    .createSignedUrl(attachment.storage_path, 60)
+  if (error) throw error
+  return data.signedUrl
+}
+
+export async function deletePrivateAttachment(
+  attachmentId: string,
+  client: SupabaseClient | null = supabase,
+) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.functions.invoke("storage-admin", {
+    body: { action: "delete", attachmentId },
+  })
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+  return data as { deleted: boolean; id: string }
+}
+
+export async function checkStorageIntegrity(client: SupabaseClient | null = supabase) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.functions.invoke("storage-admin", { body: { action: "integrity" } })
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+  return data as { missingObjects: Array<{ id: string; storage_path: string }>; orphanObjects: string[] }
+}
+
+export async function provisionUser(input: {
+  institutionalId: string; fullName: string; role: Role; department: string;
+  temporaryPassword: string; accessRequestId?: number
+}, client: SupabaseClient | null = supabase) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.functions.invoke("admin-users", { body: { action: "provision", ...input } })
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+  return data as { id: string; institutionalId: string; mustChangePassword: boolean }
+}
+
+export async function syncAuthStatus(profileId: string, active: boolean, client: SupabaseClient | null = supabase) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.functions.invoke("admin-users", { body: { action: "set-auth-status", profileId, active } })
+  if (error) throw error
+  if (data?.error) throw new Error(data.error)
+  return data as { id: string; active: boolean }
+}
+
+export async function changeOwnPassword(password: string, client: SupabaseClient | null = supabase) {
+  const configuredClient = requireSupabase(client)
+  if (password.length < 12 || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password))
+    throw new Error("La contraseña debe tener al menos 12 caracteres, mayúscula, minúscula y número.")
+  const { error: authError } = await configuredClient.auth.updateUser({ password })
+  if (authError) throw authError
+  const { data, error } = await configuredClient.rpc("complete_password_change")
+  if (error) throw error
+  return data as Profile
+}
+
+export type ActivityTimelineEntry = { event_time: string; event_type: string; reference: string; description: string }
+
+export async function getProfileActivity(profileId?: string, client: SupabaseClient | null = supabase) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = profileId
+    ? await configuredClient.rpc("get_profile_activity", { target_profile_id: profileId })
+    : await configuredClient.rpc("get_profile_activity")
+  if (error) throw error
+  return (data || []) as ActivityTimelineEntry[]
+}
+
+export async function getEquipmentActivity(equipmentId: string, client: SupabaseClient | null = supabase) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.rpc("get_equipment_activity", { target_equipment_id: equipmentId })
+  if (error) throw error
+  return (data || []) as ActivityTimelineEntry[]
+}
+
+export type QuoteStatusHistory = { id: number; quote_id: number; previous_status: string; new_status: string; changed_by: string; changed_at: string }
+export async function listQuoteStatusHistory(quoteId: number, client: SupabaseClient | null = supabase) {
+  const configuredClient = requireSupabase(client)
+  const { data, error } = await configuredClient.from("quote_status_history")
+    .select("id, quote_id, previous_status, new_status, changed_by, changed_at")
+    .eq("quote_id", quoteId).order("changed_at", { ascending: false })
+  if (error) throw error
+  return (data || []) as QuoteStatusHistory[]
 }

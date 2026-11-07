@@ -1,5 +1,6 @@
-const CACHE_NAME = 'biomedgest-shell-v1'
+const CACHE_NAME = 'biomedgest-shell-v2'
 const APP_SHELL = ['/', '/manifest.webmanifest', '/favicon.svg']
+const STATIC_DESTINATIONS = new Set(['style', 'script', 'image', 'font', 'manifest'])
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)))
@@ -19,14 +20,29 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
+  const url = new URL(event.request.url)
+
+  // Never intercept or persist Supabase, API, or any other cross-origin response.
+  if (url.origin !== self.location.origin) return
+
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('/')),
+    )
+    return
+  }
+
+  if (!STATIC_DESTINATIONS.has(event.request.destination)) return
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        const copy = response.clone()
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy))
+        if (response.ok) {
+          const copy = response.clone()
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy))
+        }
         return response
       })
-      .catch(() => caches.match(event.request).then((cached) => cached || caches.match('/'))),
+      .catch(() => caches.match(event.request)),
   )
 })

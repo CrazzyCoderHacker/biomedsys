@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import QRCode from "qrcode";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -8,6 +9,7 @@ import {
   MonitorCog,
   PackageOpen,
   RefreshCw,
+  QrCode,
   Search,
   ShieldCheck,
   Wrench,
@@ -17,6 +19,9 @@ import { InventoryAdministration, inventoryIssueLabel } from "./InventoryAdminis
 import {
   getEquipmentInventoryBundle,
   getInventoryCapabilities,
+  getEquipmentActivity,
+  isBusinessCompletionEnabled,
+  isOperationalCompletionEnabled,
   isSupabaseConfigured,
   listEquipmentInventory,
   type EquipmentInventoryBundle,
@@ -24,7 +29,9 @@ import {
   type InventoryFilters,
   type RiskLevel,
   type Role,
+  type ActivityTimelineEntry,
 } from "../lib/supabase";
+import { PrivateAttachmentPanel } from "./PrivateAttachmentPanel";
 
 const PAGE_SIZE = 20;
 
@@ -365,6 +372,9 @@ function DetailContent({ bundle, role, onChanged }: { bundle: EquipmentInventory
         </section>
 
         <aside className="detail-aside">
+          <EquipmentQr equipmentId={equipment.id} inventoryCode={equipment.inventory_code} />
+          {isOperationalCompletionEnabled && role !== "usuario" && <PrivateAttachmentPanel relation={{ equipmentId: equipment.id }} title="Archivos privados del equipo" />}
+          {isBusinessCompletionEnabled && role !== "usuario" && <EquipmentTimeline equipmentId={equipment.id} />}
           <section className="panel inventory-summary-card">
             <h3>Resumen técnico</h3>
             <div><span>Nivel de riesgo</span><strong>{equipment.current_risk_category ? riskLabels[equipment.current_risk_category] : "No visible"}</strong></div>
@@ -393,6 +403,36 @@ function DetailContent({ bundle, role, onChanged }: { bundle: EquipmentInventory
       {role === "jefe" && <InventoryAdministration bundle={bundle} onChanged={onChanged} />}
     </>
   );
+}
+
+function EquipmentTimeline({ equipmentId }: { equipmentId: string }) {
+  const [rows, setRows] = useState<ActivityTimelineEntry[]>([]);
+  const [error, setError] = useState("");
+  useEffect(() => { getEquipmentActivity(equipmentId).then(setRows).catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No fue posible cargar el historial.")); }, [equipmentId]);
+  return <section className="panel"><h3>Historial del equipo</h3><div className="audit-list">{rows.map((row, index) => <article key={`${row.event_type}-${row.reference}-${index}`}><div><strong>{row.reference}</strong><small>{new Date(row.event_time).toLocaleString("es-MX")} · {row.event_type} · {row.description}</small></div></article>)}</div>{rows.length === 0 && !error && <small>Sin actividad registrada.</small>}{error && <small className="form-error">{error}</small>}</section>;
+}
+
+function EquipmentQr({ equipmentId, inventoryCode }: { equipmentId: string; inventoryCode: string }) {
+  const [image, setImage] = useState("");
+  const [error, setError] = useState("");
+  const target = `${window.location.origin}${window.location.pathname}?equipment=${encodeURIComponent(equipmentId)}`;
+
+  useEffect(() => {
+    QRCode.toDataURL(target, { width: 320, margin: 2, errorCorrectionLevel: "M" })
+      .then(setImage)
+      .catch(() => setError("No fue posible generar el código QR."));
+  }, [target]);
+
+  function printLabel() {
+    if (!image) return;
+    const popup = window.open("", "_blank", "width=520,height=620");
+    if (!popup) { setError("El navegador bloqueó la ventana de impresión."); return; }
+    popup.opener = null;
+    popup.document.write(`<title>Etiqueta ${inventoryCode}</title><style>body{font-family:Arial;text-align:center;padding:24px}img{width:320px}small{display:block;margin-top:12px}</style><h1>BioMedGest</h1><img src="${image}" alt="QR"><h2>${inventoryCode}</h2><small>Inicia sesión para consultar la ficha autorizada.</small><script>onload=()=>print()</script>`);
+    popup.document.close();
+  }
+
+  return <section className="panel equipment-qr"><h3><QrCode size={18} /> Etiqueta QR</h3>{image && <img src={image} alt={`Código QR del equipo ${inventoryCode}`} />}<p>El código contiene únicamente un enlace con el identificador técnico del equipo.</p><div className="qr-actions"><a className="row-action" href={image} download={`BioMedGest-${inventoryCode}.png`}>Exportar PNG</a><button type="button" className="row-action" onClick={printLabel}>Imprimir</button></div>{error && <small className="form-error">{error}</small>}</section>;
 }
 
 export function EquipmentDetail({

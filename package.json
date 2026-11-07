@@ -5,14 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:demo": "vite --mode demo",
     "build": "vite build",
+    "build:demo": "vite build --mode demo",
     "preview": "vite preview",
+    "verify:demo": "node scripts/demo/verify_demo_e2e.mjs",
     "format": "oxfmt",
     "test": "vitest run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
     "lucide-react": "^1.61.0",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
@@ -20,6 +24,7 @@
     "@tailwindcss/vite": "^4.0.0",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^22.0.0",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^6.0.0",
